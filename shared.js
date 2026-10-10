@@ -574,7 +574,13 @@ const StoreDB = {
     if (!localStorage.getItem(STORAGE_PREFIX + 'sizeGuides')) this.set('sizeGuides', DEFAULT_SIZE_GUIDES);
 
     if (window.location.protocol.startsWith('http')) {
-      this.syncWithBackend();
+      this.syncWithBackend().then(() => {
+        // After pulling from server, push ALL local state back to server
+        // This ensures the server always has the merged/complete data
+        if (this.isOnline()) {
+          this.syncAllToCloud().catch(() => {});
+        }
+      });
     }
   },
 
@@ -605,23 +611,16 @@ const StoreDB = {
 
     this.set('products', prods);
 
+    // Always push FULL products array to server so all Lambdas/devices see it
     if (this.isOnline()) {
       try {
-        if (editId) {
-          await this.fetchApi(`/api/products/${editId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(savedProd)
-          });
-        } else {
-          await this.fetchApi('/api/products', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(savedProd)
-          });
-        }
+        await this.fetchApi('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(prods)
+        });
       } catch(e) {
-        console.error('Failed to save product to backend:', e);
+        console.error('Failed to save products to backend:', e);
       }
     }
     return savedProd;
@@ -656,9 +655,14 @@ const StoreDB = {
     });
     this.set('products', prods);
 
+    // Push full updated array to server
     if (this.isOnline()) {
       try {
-        await this.fetchApi(`/api/products/${id}`, { method: 'DELETE' });
+        await this.fetchApi('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(prods)
+        });
       } catch(e) {
         console.error('Failed to delete product on backend:', e);
       }
@@ -684,15 +688,16 @@ const StoreDB = {
       this.set('products', prods);
     }
 
+    // Push full data to server so all devices/Lambdas stay in sync
     if (this.isOnline()) {
       try {
-        await this.fetchApi('/api/orders', {
+        await this.fetchApi('/api/neon-sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(order)
+          body: JSON.stringify({ orders: list, products: prods })
         });
       } catch(e) {
-        console.error('Failed to post order to server:', e);
+        console.error('Failed to sync order to server:', e);
       }
     }
     return order;
@@ -707,10 +712,10 @@ const StoreDB = {
 
       if (this.isOnline()) {
         try {
-          await this.fetchApi(`/api/orders/${id}`, {
+          await this.fetchApi('/api/orders', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
+            body: JSON.stringify(orders)
           });
         } catch(e) {
           console.error(e);
@@ -726,7 +731,11 @@ const StoreDB = {
 
     if (this.isOnline()) {
       try {
-        await this.fetchApi(`/api/orders/${id}`, { method: 'DELETE' });
+        await this.fetchApi('/api/orders', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orders)
+        });
       } catch(e) {
         console.error(e);
       }
@@ -773,10 +782,17 @@ const StoreDB = {
     this.set('settings', stg);
     if (this.isOnline()) {
       try {
-        await this.fetchApi('/api/settings', {
+        // Push settings + content together for full state persistence
+        await this.fetchApi('/api/neon-sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(stg)
+          body: JSON.stringify({
+            settings: stg,
+            content: this.getContent(),
+            promos: this.getPromos(),
+            shipping: this.getShipping(),
+            sizeGuides: this.getSizeGuides()
+          })
         });
       } catch(e) {
         console.error(e);
