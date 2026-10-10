@@ -30,12 +30,14 @@ const server = http.createServer(async (req, res) => {
     return apiHandler(req, res);
   }
 
-  // ── ROUTE /admin TO admin.html ──
+  // ── ROUTE /admin TO admin.html & /product TO product.html ──
   let cleanPath = pathname;
   if (cleanPath === '/' || cleanPath === '') {
     cleanPath = '/index.html';
   } else if (cleanPath === '/admin' || cleanPath === '/admin/') {
     cleanPath = '/admin.html';
+  } else if (cleanPath === '/product' || cleanPath === '/product/') {
+    cleanPath = '/product.html';
   }
 
   let filePath = path.join(ROOT_DIR, 'public', decodeURIComponent(cleanPath));

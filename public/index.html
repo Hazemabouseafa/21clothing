@@ -625,7 +625,7 @@
 
         return `
           <div class="product-card" data-pid="${p.id}" data-active-variant="0">
-            <div class="product-visual-wrap ${hasImages ? 'has-real-image' : ''}" id="cardVisual_${p.id}">
+            <div class="product-visual-wrap ${hasImages ? 'has-real-image' : ''}" id="cardVisual_${p.id}" onclick="window.location.href='product.html?id=${p.id}'" style="cursor:pointer;" title="View ${escapeHtml(p.name)}">
               ${p.badge ? `<span class="product-badge-tag">${p.badge}</span>` : ''}
               <div id="cardMediaBox_${p.id}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative;">
                 ${hasImages ? `
@@ -639,7 +639,7 @@
             </div>
             <div class="product-info-box">
               <div class="product-meta-row">
-                <h3 class="product-title">${escapeHtml(p.name)}</h3>
+                <h3 class="product-title" style="cursor:pointer;" onclick="window.location.href='product.html?id=${p.id}'" title="View ${escapeHtml(p.name)}">${escapeHtml(p.name)}</h3>
                 <div class="product-pricing">
                   <span class="product-price">${p.price.toLocaleString()} EGP</span>
                   ${p.originalPrice ? `<span class="product-original-price">${p.originalPrice.toLocaleString()} EGP</span>` : ''}
@@ -688,8 +688,11 @@
                 }).join('')}
               </div>
 
-              <div class="card-actions-row">
-                <button type="button" class="add-bag-btn" onclick="addToBagFromCard(${p.id})">Add to Bag</button>
+              <div class="card-actions-row" style="display:flex; gap:8px;">
+                <button type="button" class="add-bag-btn" onclick="addToBagFromCard(${p.id})" style="flex:1;">Add to Bag</button>
+                <a href="product.html?id=${p.id}" class="view-product-link" title="View Details" style="display:inline-flex; align-items:center; justify-content:center; padding:12px 14px; background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--white); text-decoration:none; font-size:0.75rem; border-radius:2px; transition:all 0.25s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='var(--white)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--border)'">
+                  <span style="letter-spacing:0.1em; font-size:0.68rem; text-transform:uppercase;">View ↗</span>
+                </a>
               </div>
             </div>
           </div>
