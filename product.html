@@ -34,7 +34,13 @@
     .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
     .nav-logo-icon { width: 32px; height: 32px; border-radius: 50%; object-fit: contain; }
     .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 1.25rem; letter-spacing: 0.25em; font-weight: 600; text-transform: uppercase; }
-    .nav-actions { display: flex; align-items: center; gap: 20px; }
+    .nav-actions { display: flex; align-items: center; gap: 18px; }
+    .nav-social-links { display: flex; align-items: center; gap: 8px; }
+    .nav-social-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: var(--muted); border: 1px solid var(--border); background: rgba(255, 255, 255, 0.02); transition: all 0.25s var(--ease); text-decoration: none; }
+    .nav-social-icon:hover { color: var(--white); border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+    .footer-social-icons { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .footer-social-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; color: var(--muted); border: 1px solid var(--border); background: #0e0e11; transition: all 0.25s var(--ease); text-decoration: none; }
+    .footer-social-icon-btn:hover { color: var(--accent); border-color: var(--accent); background: rgba(232, 227, 216, 0.08); transform: translateY(-2px); }
     .nav-cart-btn { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: none; background: none; border: 1px solid var(--border); color: var(--white); padding: 8px 16px; border-radius: 20px; display: flex; align-items: center; gap: 8px; transition: var(--ease) 0.3s; }
     .nav-cart-btn:hover { border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.05); }
     .cart-pill-count { background: var(--white); color: var(--black); font-size: 0.65rem; font-weight: 600; padding: 1px 7px; border-radius: 10px; }
@@ -203,6 +209,10 @@
 
     @media (max-width: 990px) {
       nav { padding: 16px 24px; }
+      .nav-actions { gap: 10px; }
+      .nav-social-links { gap: 6px; }
+      .nav-social-icon { width: 28px; height: 28px; }
+      .nav-social-icon svg { width: 13px; height: 13px; }
       .product-main-container { padding: 24px 20px 60px; }
       .product-detail-layout { grid-template-columns: 1fr; gap: 40px; }
       .product-gallery-box { position: static; }
@@ -232,6 +242,7 @@
       <span class="nav-logo-text">21</span>
     </a>
     <div class="nav-actions">
+      <div class="nav-social-links" id="navSocialLinks"></div>
       <button class="nav-cart-btn" id="openCartBtn">
         <span>Bag</span>
         <span class="cart-pill-count" id="cartBadgeCount">0</span>
@@ -583,7 +594,8 @@
   <div class="toast-popup" id="storeToast">Added to Bag</div>
 
   <footer>
-    <div class="footer-bottom-bar">
+    <div class="footer-bottom-bar" style="flex-wrap:wrap; gap:16px;">
+      <div class="footer-social-icons" id="footerSocialIcons"></div>
       <span>&copy; 2026 Twenty One Clothing. All Rights Reserved.</span>
       <span>Cairo, Egypt</span>
     </div>
@@ -1263,6 +1275,75 @@
       return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
     }
 
+    function formatWhatsAppLink(val) {
+      if (!val) return '';
+      val = String(val).trim();
+      if (val.startsWith('http://') || val.startsWith('https://')) return val;
+      let digits = val.replace(/\D/g, '');
+      if (digits.startsWith('01')) {
+        digits = '2' + digits;
+      }
+      return `https://wa.me/${digits}`;
+    }
+
+    const SOCIAL_ICONS = {
+      instagram: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>`,
+      tiktok: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .58.04.86.11V9.4a6.33 6.33 0 0 0-1-.08A6.34 6.34 0 0 0 3 15.66a6.34 6.34 0 0 0 10.82 4.47 6.27 6.27 0 0 0 1.88-4.47V8.58a8.28 8.28 0 0 0 4.89 1.57V6.71a4.84 4.84 0 0 1-1-.02z"/></svg>`,
+      facebook: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+      whatsapp: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.24 8.24-1.44 0-2.85-.38-4.09-1.1l-.29-.17-3.05.8 1.15-3.07-.19-.3a8.19 8.19 0 0 1-1.25-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.52 11.64c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.12.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.23-.18-.48-.3z"/></svg>`
+    };
+
+    function renderSocialLinks() {
+      const set = StoreDB.getSettings() || {};
+      const links = [];
+
+      if (set.instagram && set.instagram.trim()) {
+        links.push({ id: 'instagram', name: 'Instagram', url: set.instagram.trim(), icon: SOCIAL_ICONS.instagram });
+      }
+      if (set.tiktok && set.tiktok.trim()) {
+        links.push({ id: 'tiktok', name: 'TikTok', url: set.tiktok.trim(), icon: SOCIAL_ICONS.tiktok });
+      }
+      if (set.facebook && set.facebook.trim()) {
+        links.push({ id: 'facebook', name: 'Facebook', url: set.facebook.trim(), icon: SOCIAL_ICONS.facebook });
+      }
+      const wa = set.whatsapp || set.waNumber;
+      if (wa && wa.trim()) {
+        links.push({ id: 'whatsapp', name: 'WhatsApp', url: formatWhatsAppLink(wa), icon: SOCIAL_ICONS.whatsapp });
+      }
+
+      // 1. Navigation bar header icons
+      const navContainer = document.getElementById('navSocialLinks');
+      if (navContainer) {
+        if (links.length === 0) {
+          navContainer.innerHTML = '';
+          navContainer.style.display = 'none';
+        } else {
+          navContainer.style.display = 'flex';
+          navContainer.innerHTML = links.map(item => `
+            <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="nav-social-icon clickable" aria-label="${item.name}" title="${item.name}">
+              ${item.icon}
+            </a>
+          `).join('');
+        }
+      }
+
+      // 2. Footer icons strip
+      const footerIcons = document.getElementById('footerSocialIcons');
+      if (footerIcons) {
+        if (links.length === 0) {
+          footerIcons.innerHTML = '';
+          footerIcons.style.display = 'none';
+        } else {
+          footerIcons.style.display = 'flex';
+          footerIcons.innerHTML = links.map(item => `
+            <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="footer-social-icon-btn clickable" aria-label="${item.name}" title="${item.name}">
+              ${item.icon}
+            </a>
+          `).join('');
+        }
+      }
+    }
+
     // Apply announcement
     function setupAnnouncement() {
       const set = StoreDB.getSettings();
@@ -1298,17 +1379,20 @@
       setupPixel();
       setupAnnouncement();
       loadProductPage();
+      renderSocialLinks();
       updateCartDrawer();
     });
 
     window.addEventListener('storage', () => {
       setupAnnouncement();
       loadProductPage();
+      renderSocialLinks();
       updateCartDrawer();
     });
     window.addEventListener('storedb_change', () => {
       setupAnnouncement();
       loadProductPage();
+      renderSocialLinks();
       updateCartDrawer();
     });
   </script>

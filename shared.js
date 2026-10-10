@@ -195,6 +195,10 @@ const DEFAULT_SHIPPING = {
 
 const DEFAULT_SETTINGS = {
   waNumber: "201012345678",
+  instagram: "https://instagram.com/twentyoneclothing",
+  tiktok: "https://tiktok.com/@twentyoneclothing",
+  facebook: "https://facebook.com/twentyoneclothing",
+  whatsapp: "201012345678",
   announcement: "FREE SHIPPING ON ORDERS OVER 2,500 EGP | CASH ON DELIVERY ACROSS EGYPT",
   showAnnouncement: "true",
   storeStatus: "open",

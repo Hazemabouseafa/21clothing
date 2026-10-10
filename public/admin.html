@@ -937,6 +937,54 @@
                 </select>
               </div>
 
+              <!-- Social Media Channels Section -->
+              <div class="form-group" style="background: rgba(232, 227, 216, 0.03); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 22px;">
+                <label class="form-label" style="color: var(--accent); font-weight: 600; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 6px;">
+                  <span style="display:flex; align-items:center; gap:8px;">
+                    <span>🌐</span> <span id="lblSocialTitle">Social Media Channels (روابط التواصل الاجتماعي)</span>
+                  </span>
+                  <span style="font-size: 0.72rem; color: var(--text-dim); font-weight: normal;" id="lblSocialHint">Displays in Header & Footer</span>
+                </label>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                  <!-- Instagram -->
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem; display: flex; align-items: center; gap: 6px;" id="lblInstagram">
+                      <span style="color:#e1306c;">📸</span> <span>Instagram (رابط إنستغرام)</span>
+                    </label>
+                    <input type="url" class="form-input" id="setInstagram" placeholder="https://instagram.com/twentyoneclothing" />
+                  </div>
+
+                  <!-- TikTok -->
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem; display: flex; align-items: center; gap: 6px;" id="lblTiktok">
+                      <span style="color:#25f4ee;">🎵</span> <span>TikTok (رابط تيك توك)</span>
+                    </label>
+                    <input type="url" class="form-input" id="setTiktok" placeholder="https://tiktok.com/@twentyoneclothing" />
+                  </div>
+
+                  <!-- Facebook -->
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem; display: flex; align-items: center; gap: 6px;" id="lblFacebook">
+                      <span style="color:#1877f2;">📘</span> <span>Facebook (رابط فيسبوك)</span>
+                    </label>
+                    <input type="url" class="form-input" id="setFacebook" placeholder="https://facebook.com/twentyoneclothing" />
+                  </div>
+
+                  <!-- WhatsApp Social -->
+                  <div>
+                    <label class="form-label" style="font-size: 0.78rem; display: flex; align-items: center; gap: 6px;" id="lblWhatsappSocial">
+                      <span style="color:#25d366;">💬</span> <span>WhatsApp Direct Link / Phone (رابط أو رقم واتساب)</span>
+                    </label>
+                    <input type="text" class="form-input" id="setWhatsapp" placeholder="e.g. 201012345678 or https://wa.me/201012345678" />
+                  </div>
+                </div>
+
+                <p style="font-size: 0.74rem; color: var(--text-dim); margin-top: 12px; margin-bottom: 0;" id="txtSocialDesc">
+                  The luxury icons will automatically appear in the storefront navigation header and footer. Blank links are hidden automatically.
+                </p>
+              </div>
+
               <!-- Admin Console Security Credentials -->
               <div class="form-group" style="background: rgba(232, 227, 216, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 22px;">
                 <label class="form-label" style="color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 8px;">
@@ -1176,7 +1224,14 @@
         btnAdminLogout: 'Sign Out (تسجيل الخروج)',
         thProductOrder: 'Order / Rank',
         txtOrderNotice: 'Product order here defines appearance sequence on the storefront. Use (▲ / ▼) arrows or drag rows to position items.',
-        btnResetOrder: 'Reset Order'
+        btnResetOrder: 'Reset Order',
+        lblSocialTitle: 'Social Media Channels (روابط التواصل)',
+        lblSocialHint: 'Displays in Header & Footer',
+        lblInstagram: 'Instagram URL',
+        lblTiktok: 'TikTok URL',
+        lblFacebook: 'Facebook URL',
+        lblWhatsappSocial: 'WhatsApp Direct Link / Phone',
+        txtSocialDesc: 'The luxury icons will automatically appear in the storefront navigation header and footer. Blank links are hidden automatically.'
       },
       ar: {
         controlPanel: 'لوحة تحكم البراند', overview: 'نظرة عامة', orders: 'الطلبات',
@@ -1215,7 +1270,14 @@
         btnAdminLogout: 'تسجيل الخروج',
         thProductOrder: 'الترتيب في المتجر',
         txtOrderNotice: 'ترتيب المنتجات هنا يحدد ما يظهر أولاً للعميل في واجهة المتجر. استخدم الأسهم (▲ / ▼) أو السحب لتحديد ما يظهر أولاً.',
-        btnResetOrder: 'استعادة الترتيب الأصلي'
+        btnResetOrder: 'استعادة الترتيب الأصلي',
+        lblSocialTitle: 'روابط التواصل الاجتماعي',
+        lblSocialHint: 'أيقونات في أعلى المتجر والفوتر',
+        lblInstagram: 'رابط إنستغرام (Instagram)',
+        lblTiktok: 'رابط تيك توك (TikTok)',
+        lblFacebook: 'رابط فيسبوك (Facebook)',
+        lblWhatsappSocial: 'رابط أو رقم واتساب (WhatsApp)',
+        txtSocialDesc: 'ستظهر الأيقونات الفاخرة تلقائياً في أعلى شريط التنقل بالمتجر والفوتر بالأسفل. الحقول الفارغة تختفي تلقائياً.'
       }
     };
 
@@ -1295,6 +1357,15 @@
       if (document.getElementById('bottomGuideHeader')) document.getElementById('bottomGuideHeader').textContent = t.bottomGuideHeader;
       if (document.getElementById('lblAdminUser')) document.getElementById('lblAdminUser').textContent = t.lblAdminUser;
       if (document.getElementById('lblAdminPass')) document.getElementById('lblAdminPass').textContent = t.lblAdminPass;
+
+      // Social Media UI elements
+      if (document.getElementById('lblSocialTitle')) document.getElementById('lblSocialTitle').textContent = t.lblSocialTitle;
+      if (document.getElementById('lblSocialHint')) document.getElementById('lblSocialHint').textContent = t.lblSocialHint;
+      if (document.getElementById('lblInstagram')) document.getElementById('lblInstagram').innerHTML = `<span style="color:#e1306c;">📸</span> <span>${t.lblInstagram}</span>`;
+      if (document.getElementById('lblTiktok')) document.getElementById('lblTiktok').innerHTML = `<span style="color:#25f4ee;">🎵</span> <span>${t.lblTiktok}</span>`;
+      if (document.getElementById('lblFacebook')) document.getElementById('lblFacebook').innerHTML = `<span style="color:#1877f2;">📘</span> <span>${t.lblFacebook}</span>`;
+      if (document.getElementById('lblWhatsappSocial')) document.getElementById('lblWhatsappSocial').innerHTML = `<span style="color:#25d366;">💬</span> <span>${t.lblWhatsappSocial}</span>`;
+      if (document.getElementById('txtSocialDesc')) document.getElementById('txtSocialDesc').textContent = t.txtSocialDesc;
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
@@ -2261,6 +2332,10 @@
       const set = StoreDB.getSettings();
       document.getElementById('setMetaPixel').value = set.metaPixel || '';
       document.getElementById('setWaNumber').value = set.waNumber || '';
+      if (document.getElementById('setInstagram')) document.getElementById('setInstagram').value = set.instagram || '';
+      if (document.getElementById('setTiktok')) document.getElementById('setTiktok').value = set.tiktok || '';
+      if (document.getElementById('setFacebook')) document.getElementById('setFacebook').value = set.facebook || '';
+      if (document.getElementById('setWhatsapp')) document.getElementById('setWhatsapp').value = set.whatsapp || set.waNumber || '';
       document.getElementById('setAnnouncement').value = set.announcement || '';
       document.getElementById('setShowAnnouncement').value = set.showAnnouncement || 'true';
       document.getElementById('setStoreStatus').value = set.storeStatus || 'open';
@@ -2274,6 +2349,10 @@
       const updated = {
         metaPixel: document.getElementById('setMetaPixel').value.trim(),
         waNumber: document.getElementById('setWaNumber').value.trim(),
+        instagram: document.getElementById('setInstagram') ? document.getElementById('setInstagram').value.trim() : '',
+        tiktok: document.getElementById('setTiktok') ? document.getElementById('setTiktok').value.trim() : '',
+        facebook: document.getElementById('setFacebook') ? document.getElementById('setFacebook').value.trim() : '',
+        whatsapp: document.getElementById('setWhatsapp') ? document.getElementById('setWhatsapp').value.trim() : '',
         announcement: document.getElementById('setAnnouncement').value.trim(),
         showAnnouncement: document.getElementById('setShowAnnouncement').value,
         storeStatus: document.getElementById('setStoreStatus').value,
@@ -2281,7 +2360,7 @@
         adminPass: document.getElementById('setAdminPass') ? document.getElementById('setAdminPass').value : 'twenty21'
       };
       await StoreDB.setSettings(updated);
-      showToast(currentLang === 'ar' ? 'تم حفظ إعدادات المتجر وبيانات الدخول' : 'Store settings & credentials saved!');
+      showToast(currentLang === 'ar' ? 'تم حفظ إعدادات المتجر وروابط التواصل' : 'Store settings & social links saved!');
     }
 
     /* ── Size Guides Controller ── */
