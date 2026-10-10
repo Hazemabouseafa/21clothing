@@ -579,6 +579,21 @@
             <div class="panel-title"><span>⚙️</span> <span id="txtSettingsTitle">Storefront & Meta Ads Settings</span></div>
           </div>
           <div style="padding: 24px;">
+            <!-- Database Connection Status Card -->
+            <div id="dbStatusCard" style="display: flex; align-items: center; justify-content: space-between; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 14px 18px; margin-bottom: 22px; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;" id="dbStatusIcon">⚡</span>
+                <div>
+                  <div style="font-weight: 600; font-size: 0.9rem; color: #fff;" id="dbStatusTitle">Neon Database: Checking...</div>
+                  <div style="font-size: 0.75rem; color: var(--text-dim);" id="dbStatusSubtitle">Connecting to backend...</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="status-pill delivered" id="dbStatusBadge">Online</span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="checkDatabaseStatus(true)" style="padding: 4px 10px; font-size: 0.75rem;" title="Refresh database status">🔄</button>
+              </div>
+            </div>
+
             <form id="storeSettingsForm" onsubmit="saveStoreSettings(event)">
               
               <!-- Meta Pixel Integration Field -->
@@ -1516,7 +1531,51 @@
       showToast('Shipping rates updated');
     }
 
-    /* ── Settings (including Meta Pixel) ── */
+    /* ── Settings (including Meta Pixel & Neon Status) ── */
+    async function checkDatabaseStatus(showNotification = false) {
+      try {
+        const res = await fetch('/api/status');
+        if (res.ok) {
+          const data = await res.json();
+          const db = data.database || {};
+          const isNeon = db.connected;
+          const title = document.getElementById('dbStatusTitle');
+          const sub = document.getElementById('dbStatusSubtitle');
+          const badge = document.getElementById('dbStatusBadge');
+          const card = document.getElementById('dbStatusCard');
+          const icon = document.getElementById('dbStatusIcon');
+
+          if (isNeon) {
+            if (title) title.textContent = currentLang === 'ar' ? `قاعدة بيانات نيون (Neon): متصلة بنجاح` : `Neon Postgres: Connected`;
+            if (sub) sub.textContent = currentLang === 'ar' ? `قاعدة البيانات: ${db.name || '21clothing'} — استضافة سحابية Vercel + Neon` : `Database: ${db.name || '21clothing'} on ${db.host || 'neon.tech'}`;
+            if (badge) {
+              badge.textContent = 'Neon Live 🟢';
+              badge.className = 'status-pill delivered';
+            }
+            if (card) {
+              card.style.background = 'rgba(16, 185, 129, 0.08)';
+              card.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            }
+            if (icon) icon.textContent = '⚡';
+            if (showNotification) showToast(currentLang === 'ar' ? 'متصل بقاعدة بيانات Neon السحابية' : 'Connected to Neon Serverless Postgres');
+          } else {
+            if (title) title.textContent = currentLang === 'ar' ? 'وضع التخزين المحلي (Local Storage)' : 'Local Storage Mode';
+            if (sub) sub.textContent = currentLang === 'ar' ? 'لربط قاعدة بيانات Neon السحابية، أضف متغير DATABASE_URL في Vercel أو .env' : 'To enable cloud database, configure DATABASE_URL in Vercel or .env';
+            if (badge) {
+              badge.textContent = 'Local 🟠';
+              badge.className = 'status-pill pending';
+            }
+            if (card) {
+              card.style.background = 'rgba(234, 179, 8, 0.08)';
+              card.style.borderColor = 'rgba(234, 179, 8, 0.3)';
+            }
+            if (icon) icon.textContent = '💾';
+            if (showNotification) showToast(currentLang === 'ar' ? 'يعمل في وضع التخزين المحلي' : 'Running in local storage mode');
+          }
+        }
+      } catch (e) {}
+    }
+
     function loadStoreSettings() {
       const set = StoreDB.getSettings();
       document.getElementById('setMetaPixel').value = set.metaPixel || '';
@@ -1524,6 +1583,7 @@
       document.getElementById('setAnnouncement').value = set.announcement || '';
       document.getElementById('setShowAnnouncement').value = set.showAnnouncement || 'true';
       document.getElementById('setStoreStatus').value = set.storeStatus || 'open';
+      checkDatabaseStatus();
     }
 
     async function saveStoreSettings(e) {

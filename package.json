@@ -1,11 +1,12 @@
-﻿{
+{
   "name": "21clothing",
   "version": "1.0.0",
   "description": "21 (Twenty One Clothing) — Premium Egyptian Streetwear Store & Brand Control Panel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "db:test": "node scripts/test-neon.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4"
