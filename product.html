@@ -1395,6 +1395,12 @@
       renderSocialLinks();
       updateCartDrawer();
     });
+    window.addEventListener('storedb_synced', () => {
+      setupAnnouncement();
+      loadProductPage();
+      renderSocialLinks();
+      updateCartDrawer();
+    });
   </script>
 </body>
 </html>

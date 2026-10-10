@@ -282,34 +282,63 @@ const StoreDB = {
     }
   },
 
+  isOnline() {
+    return (typeof window !== 'undefined' && window.location.protocol.startsWith('http')) || this.hasBackend;
+  },
+
   async syncWithBackend() {
+    if (typeof window === 'undefined' || !window.location.protocol.startsWith('http')) return;
     try {
-      const res = await fetch('/api/products');
-      if (res.ok) {
+      const [pRes, oRes, prRes, shRes, stRes, cRes, sgRes] = await Promise.allSettled([
+        fetch('/api/products'),
+        fetch('/api/orders'),
+        fetch('/api/promos'),
+        fetch('/api/shipping'),
+        fetch('/api/settings'),
+        fetch('/api/content'),
+        fetch('/api/size-guides')
+      ]);
+
+      let anySuccess = false;
+
+      if (pRes.status === 'fulfilled' && pRes.value.ok) {
+        anySuccess = true;
+        this.set('products', await pRes.value.json());
+      }
+      if (oRes.status === 'fulfilled' && oRes.value.ok) {
+        anySuccess = true;
+        this.set('orders', await oRes.value.json());
+      }
+      if (prRes.status === 'fulfilled' && prRes.value.ok) {
+        anySuccess = true;
+        this.set('promos', await prRes.value.json());
+      }
+      if (shRes.status === 'fulfilled' && shRes.value.ok) {
+        anySuccess = true;
+        this.set('shipping', await shRes.value.json());
+      }
+      if (stRes.status === 'fulfilled' && stRes.value.ok) {
+        anySuccess = true;
+        this.set('settings', await stRes.value.json());
+      }
+      if (cRes.status === 'fulfilled' && cRes.value.ok) {
+        anySuccess = true;
+        this.set('content', await cRes.value.json());
+      }
+      if (sgRes.status === 'fulfilled' && sgRes.value.ok) {
+        anySuccess = true;
+        this.set('sizeGuides', await sgRes.value.json());
+      }
+
+      if (anySuccess) {
         this.hasBackend = true;
-        const products = await res.json();
-        this.set('products', products);
+      }
 
-        const ordersRes = await fetch('/api/orders');
-        if (ordersRes.ok) this.set('orders', await ordersRes.json());
-
-        const promosRes = await fetch('/api/promos');
-        if (promosRes.ok) this.set('promos', await promosRes.json());
-
-        const shipRes = await fetch('/api/shipping');
-        if (shipRes.ok) this.set('shipping', await shipRes.json());
-
-        const setRes = await fetch('/api/settings');
-        if (setRes.ok) this.set('settings', await setRes.json());
-
-        const cntRes = await fetch('/api/content');
-        if (cntRes.ok) this.set('content', await cntRes.json());
-
-        const sgRes = await fetch('/api/size-guides');
-        if (sgRes.ok) this.set('sizeGuides', await sgRes.json());
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('storedb_synced'));
       }
     } catch (e) {
-      this.hasBackend = false;
+      console.error('[StoreDB sync error]', e);
     }
   },
 
@@ -354,7 +383,7 @@ const StoreDB = {
 
     this.set('products', prods);
 
-    if (this.hasBackend) {
+    if (this.isOnline()) {
       try {
         if (editId) {
           await fetch(`/api/products/${editId}`, {
@@ -382,7 +411,7 @@ const StoreDB = {
     });
     this.set('products', newProds);
 
-    if (this.hasBackend) {
+    if (this.isOnline()) {
       try {
         await fetch('/api/products', {
           method: 'PUT',
@@ -405,7 +434,7 @@ const StoreDB = {
     });
     this.set('products', prods);
 
-    if (this.hasBackend) {
+    if (this.isOnline()) {
       try {
         await fetch(`/api/products/${id}`, { method: 'DELETE' });
       } catch(e) {
@@ -433,7 +462,7 @@ const StoreDB = {
       this.set('products', prods);
     }
 
-    if (this.hasBackend) {
+    if (this.isOnline()) {
       try {
         await fetch('/api/orders', {
           method: 'POST',
@@ -454,7 +483,7 @@ const StoreDB = {
       o.status = newStatus;
       this.set('orders', orders);
 
-      if (this.hasBackend) {
+      if (this.isOnline()) {
         try {
           await fetch(`/api/orders/${id}`, {
             method: 'PUT',
@@ -473,7 +502,7 @@ const StoreDB = {
     orders = orders.filter(x => x.id != id);
     this.set('orders', orders);
 
-    if (this.hasBackend) {
+    if (this.isOnline()) {
       try {
         await fetch(`/api/orders/${id}`, { method: 'DELETE' });
       } catch(e) {
@@ -486,12 +515,16 @@ const StoreDB = {
   getPromos() { return this.get('promos', DEFAULT_PROMOS); },
   async setPromos(pms) {
     this.set('promos', pms);
-    if (this.hasBackend) {
-      fetch('/api/promos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pms)
-      }).catch(console.error);
+    if (this.isOnline()) {
+      try {
+        await fetch('/api/promos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(pms)
+        });
+      } catch(e) {
+        console.error(e);
+      }
     }
   },
 
@@ -499,25 +532,33 @@ const StoreDB = {
   getShipping() { return this.get('shipping', DEFAULT_SHIPPING); },
   async setShipping(shp) {
     this.set('shipping', shp);
-    if (this.hasBackend) {
-      fetch('/api/shipping', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(shp)
-      }).catch(console.error);
+    if (this.isOnline()) {
+      try {
+        await fetch('/api/shipping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(shp)
+        });
+      } catch(e) {
+        console.error(e);
+      }
     }
   },
 
-  // ── Settings (including Meta Pixel) ──
+  // ── Settings (including Meta Pixel & Social Links) ──
   getSettings() { return this.get('settings', DEFAULT_SETTINGS); },
   async setSettings(stg) {
     this.set('settings', stg);
-    if (this.hasBackend) {
-      fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(stg)
-      }).catch(console.error);
+    if (this.isOnline()) {
+      try {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stg)
+        });
+      } catch(e) {
+        console.error(e);
+      }
     }
   },
 
@@ -525,12 +566,16 @@ const StoreDB = {
   getContent() { return this.get('content', DEFAULT_CONTENT); },
   async setContent(cnt) {
     this.set('content', cnt);
-    if (this.hasBackend) {
-      fetch('/api/content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cnt)
-      }).catch(console.error);
+    if (this.isOnline()) {
+      try {
+        await fetch('/api/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cnt)
+        });
+      } catch(e) {
+        console.error(e);
+      }
     }
   },
 
@@ -538,7 +583,7 @@ const StoreDB = {
   getSizeGuides() { return this.get('sizeGuides', DEFAULT_SIZE_GUIDES); },
   async setSizeGuides(sg) {
     this.set('sizeGuides', sg);
-    if (this.hasBackend) {
+    if (this.isOnline()) {
       try {
         await fetch('/api/size-guides', {
           method: 'POST',

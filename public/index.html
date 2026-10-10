@@ -261,7 +261,7 @@
         <ul class="footer-link-list">
           <li><a href="#collection">Drop 001</a></li>
           <li><a href="#story">Story</a></li>
-          <li><a href="#">Size Guide</a></li>
+          <li><a href="javascript:void(0)" onclick="openStoreSizeGuide('top')">Size Guide</a></li>
         </ul>
       </div>
       <div>
@@ -1204,22 +1204,40 @@
       }
     }
 
-    window.addEventListener('storage', () => {
+    function updateShippingDisplay() {
+      const rates = StoreDB.getShipping() || DEFAULT_SHIPPING;
+      const select = document.getElementById('custGov');
+      if (select) {
+        const currentVal = select.value;
+        select.innerHTML = `
+          <option value="Cairo">Cairo (القاهرة) — ${rates.cairo} EGP</option>
+          <option value="Giza">Giza (الجيزة) — ${rates.cairo} EGP</option>
+          <option value="Alexandria">Alexandria (الإسكندرية) — ${rates.alex} EGP</option>
+          <option value="Delta">Delta & Canal (الدلتا ومدن القناة) — ${rates.delta} EGP</option>
+          <option value="UpperEgypt">Upper Egypt & Red Sea (الصعيد والبحر الأحمر) — ${rates.upperEgypt} EGP</option>
+        `;
+        if (currentVal) select.value = currentVal;
+      }
+      const note = document.getElementById('drawerShippingNote');
+      if (note && rates.cairo !== undefined) {
+        note.textContent = `From ${rates.cairo} EGP`;
+      }
+    }
+
+    function refreshStorefrontUI() {
       applyStorefrontContent();
       renderStorefrontProducts();
       renderSocialLinks();
-    });
-    window.addEventListener('storedb_change', () => {
-      applyStorefrontContent();
-      renderStorefrontProducts();
-      renderSocialLinks();
-    });
+      updateShippingDisplay();
+    }
+
+    window.addEventListener('storage', refreshStorefrontUI);
+    window.addEventListener('storedb_change', refreshStorefrontUI);
+    window.addEventListener('storedb_synced', refreshStorefrontUI);
 
     // Initialize Page
     setupMetaPixel();
-    applyStorefrontContent();
-    renderStorefrontProducts();
-    renderSocialLinks();
+    refreshStorefrontUI();
     updateCartDrawer();
   </script>
 </body>
