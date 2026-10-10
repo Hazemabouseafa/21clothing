@@ -105,7 +105,171 @@
     .admin-toast { position: fixed; bottom: 28px; right: 28px; background: var(--accent); color: #000; padding: 12px 24px; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 0; transform: translateY(15px); transition: var(--transition); z-index: 2000; pointer-events: none; }
     [dir="rtl"] .admin-toast { right: auto; left: 28px; }
     .admin-toast.show { opacity: 1; transform: translateY(0); }
-    @media (max-width: 900px) { body { flex-direction: column; } .sidebar { width: 100%; min-height: auto; position: static; } .nav-menu { flex-direction: row; overflow-x: auto; padding: 10px 16px; } .nav-item button { white-space: nowrap; } .topbar { padding: 0 16px; } .content-area { padding: 20px 16px; } }
+
+    /* Product Order & Sorting Controls */
+    .order-cell-wrap { display: flex; align-items: center; gap: 8px; }
+    .order-rank-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 32px; padding: 0 8px; border-radius: 6px; background: var(--surface-light); border: 1px solid var(--border); font-weight: 700; font-size: 0.82rem; color: var(--text); user-select: none; }
+    .order-rank-badge.first { background: rgba(232, 227, 216, 0.15); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(232, 227, 216, 0.15); }
+    .order-btn-group { display: inline-flex; flex-direction: column; gap: 3px; }
+    .btn-order-move { width: 28px; height: 20px; background: var(--surface-light); border: 1px solid var(--border); border-radius: 4px; color: var(--text-muted); font-size: 0.72rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); padding: 0; line-height: 1; }
+    .btn-order-move:hover:not(:disabled) { background: var(--surface-hover); color: #fff; border-color: var(--accent); }
+    .btn-order-move:disabled { opacity: 0.2; cursor: not-allowed; }
+    .drag-handle { cursor: grab; color: var(--text-dim); font-size: 1.1rem; padding: 0 4px; user-select: none; }
+    .drag-handle:active { cursor: grabbing; }
+    tr.dragging { opacity: 0.35; background: rgba(232, 227, 216, 0.08) !important; }
+    tr.drag-over { border-top: 2px solid var(--accent) !important; }
+
+    /* App Wrapper & Mobile Layout */
+    #adminApp { display: flex; width: 100%; min-height: 100vh; position: relative; }
+    .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(6px); z-index: 99; opacity: 0; transition: opacity 0.3s ease; }
+    .sidebar-backdrop.active { display: block; opacity: 1; }
+    .mobile-header-bar { display: none; }
+    .mobile-tabs-strip { display: none; }
+    .mobile-sidebar-close-btn { display: none; }
+
+    /* RESPONSIVE & MOBILE STYLES */
+    @media (max-width: 991px) {
+      body { overflow-x: hidden; }
+      #adminApp { flex-direction: column; }
+
+      /* Mobile Sticky Header Bar */
+      .mobile-header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 18px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 80;
+      }
+      .mobile-menu-btn {
+        background: var(--surface-light);
+        border: 1px solid var(--border);
+        color: #fff;
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+      .mobile-menu-btn:hover {
+        background: var(--surface-hover);
+        border-color: var(--text-muted);
+      }
+
+      /* Mobile Drawer for Sidebar */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 290px;
+        height: 100vh;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 30px rgba(0, 0, 0, 0.85);
+      }
+      [dir="rtl"] .sidebar {
+        left: auto;
+        right: 0;
+        transform: translateX(100%);
+        box-shadow: -4px 0 30px rgba(0, 0, 0, 0.85);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .mobile-sidebar-close-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Mobile Quick Tabs Strip */
+      .mobile-tabs-strip {
+        display: flex;
+        overflow-x: auto;
+        background: #0d0d10;
+        border-bottom: 1px solid var(--border);
+        padding: 8px 12px;
+        gap: 8px;
+        position: sticky;
+        top: 63px;
+        z-index: 70;
+        scrollbar-width: none;
+      }
+      .mobile-tabs-strip::-webkit-scrollbar { display: none; }
+      .mobile-tab-chip {
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: var(--transition);
+      }
+      .mobile-tab-chip:hover {
+        color: #fff;
+        border-color: rgba(255,255,255,0.3);
+      }
+      .mobile-tab-chip.active {
+        background: var(--accent);
+        color: #000;
+        border-color: var(--accent);
+        font-weight: 700;
+      }
+
+      /* Desktop Topbar is hidden on mobile */
+      .topbar { display: none; }
+
+      /* Spacing & Layout */
+      .content-area { padding: 18px 12px; }
+      .panel { margin-bottom: 20px; border-radius: 8px; }
+      .panel-header { padding: 14px 16px; gap: 12px; }
+      .panel-title { font-size: 0.98rem; }
+      .panel-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+      .panel-actions .btn { flex: 1; justify-content: center; min-width: 140px; }
+
+      /* KPIs */
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+      .kpi-card { padding: 16px 14px; }
+      .kpi-value { font-size: 1.4rem; }
+      .kpi-label { font-size: 0.72rem; }
+
+      /* Forms stack cleanly on mobile */
+      .form-row { grid-template-columns: 1fr !important; gap: 12px !important; }
+
+      /* Modals */
+      .modal-backdrop { padding: 10px; }
+      .modal-box { max-height: 94vh; width: 100%; }
+      .modal-header { padding: 16px 18px; }
+      .modal-body { padding: 18px 16px; }
+      .modal-footer { padding: 14px 16px; }
+
+      /* Table responsive touches */
+      th, td { padding: 12px 14px; font-size: 0.8rem; }
+    }
+
+    @media (max-width: 480px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .content-area { padding: 14px 10px; }
+      .brand-header { padding: 18px 16px; }
+      #adminLoginScreen { padding: 16px; }
+      #adminLoginScreen > div { padding: 28px 20px !important; }
+    }
   </style>
 </head>
 <body>
@@ -162,92 +326,147 @@
 
   <!-- AUTHENTICATED DASHBOARD APPLICATION WRAPPER -->
   <div id="adminApp" style="display:none; width:100%; min-height:100vh;">
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand-header">
-      <img src="logo.png" alt="21 Logo" class="brand-logo-img" />
-      <div class="brand-title-wrap">
-        <span class="brand-name">21</span>
-        <span class="brand-badge" id="txtControlPanel">Brand Console</span>
-      </div>
-    </div>
-    <ul class="nav-menu">
-      <li class="nav-item active" data-tab="overview">
-        <button type="button">
-          <span class="nav-icon">📊</span>
-          <span class="nav-text" id="navOverview">Overview</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="orders">
-        <button type="button">
-          <span class="nav-icon">🛒</span>
-          <span class="nav-text" id="navOrders">Orders</span>
-          <span class="nav-counter alert" id="ordersPendingBadge">0</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="products">
-        <button type="button">
-          <span class="nav-icon">👕</span>
-          <span class="nav-text" id="navProducts">Hoodies</span>
-          <span class="nav-counter" id="hoodiesCountBadge">6</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="content">
-        <button type="button">
-          <span class="nav-icon">📝</span>
-          <span class="nav-text" id="navContent">Store Texts</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="promos">
-        <button type="button">
-          <span class="nav-icon">🏷️</span>
-          <span class="nav-text" id="navPromos">Promo Codes</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="shipping">
-        <button type="button">
-          <span class="nav-icon">🚚</span>
-          <span class="nav-text" id="navShipping">Shipping Rates</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="sizeguide">
-        <button type="button">
-          <span class="nav-icon">📏</span>
-          <span class="nav-text" id="navSizeGuide">Size Guide</span>
-        </button>
-      </li>
-      <li class="nav-item" data-tab="settings">
-        <button type="button">
-          <span class="nav-icon">⚙️</span>
-          <span class="nav-text" id="navSettings">Store Settings</span>
-        </button>
-      </li>
-    </ul>
-    <div class="sidebar-footer">
-      <a href="index.html" target="_blank" class="view-store-btn">
-        <span>🌐</span>
-        <span id="btnViewStore">View Storefront ↗</span>
-      </a>
-      <button type="button" onclick="handleAdminLogout()" class="view-store-btn" style="cursor:pointer; color:#ef4444; border-color:rgba(239,68,68,0.25); background:rgba(239,68,68,0.05); width:100%;">
-        <span>🔒</span>
-        <span id="btnAdminLogout">Sign Out</span>
-      </button>
-    </div>
-  </aside>
-  <!-- Main Content Area -->
-  <div class="main-wrapper">
-    <header class="topbar">
-      <div class="topbar-title">
-        <span id="currentTabTitle">Brand Overview</span>
-      </div>
-      <div class="topbar-actions">
-        <div class="status-badge-live">
-          <div class="status-dot"></div>
-          <span id="storeStatusLabel">STORE LIVE</span>
+        <img src="logo.png" alt="21 Logo" class="brand-logo-img" />
+        <div class="brand-title-wrap">
+          <span class="brand-name">21</span>
+          <span class="brand-badge" id="txtControlPanel">Brand Console</span>
         </div>
-        <button class="lang-toggle-btn" id="langToggle">العربية</button>
+        <button type="button" class="mobile-sidebar-close-btn" onclick="toggleMobileSidebar(false)" style="margin-left:auto; background:none; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;" title="Close Menu">✕</button>
       </div>
-    </header>
+      <ul class="nav-menu">
+        <li class="nav-item active" data-tab="overview">
+          <button type="button">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text" id="navOverview">Overview</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="orders">
+          <button type="button">
+            <span class="nav-icon">🛒</span>
+            <span class="nav-text" id="navOrders">Orders</span>
+            <span class="nav-counter alert" id="ordersPendingBadge">0</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="products">
+          <button type="button">
+            <span class="nav-icon">👕</span>
+            <span class="nav-text" id="navProducts">Hoodies</span>
+            <span class="nav-counter" id="hoodiesCountBadge">6</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="content">
+          <button type="button">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text" id="navContent">Store Texts</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="promos">
+          <button type="button">
+            <span class="nav-icon">🏷️</span>
+            <span class="nav-text" id="navPromos">Promo Codes</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="shipping">
+          <button type="button">
+            <span class="nav-icon">🚚</span>
+            <span class="nav-text" id="navShipping">Shipping Rates</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="sizeguide">
+          <button type="button">
+            <span class="nav-icon">📏</span>
+            <span class="nav-text" id="navSizeGuide">Size Guide</span>
+          </button>
+        </li>
+        <li class="nav-item" data-tab="settings">
+          <button type="button">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text" id="navSettings">Store Settings</span>
+          </button>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <a href="index.html" target="_blank" class="view-store-btn">
+          <span>🌐</span>
+          <span id="btnViewStore">View Storefront ↗</span>
+        </a>
+        <button type="button" onclick="handleAdminLogout()" class="view-store-btn" style="cursor:pointer; color:#ef4444; border-color:rgba(239,68,68,0.25); background:rgba(239,68,68,0.05); width:100%;">
+          <span>🔒</span>
+          <span id="btnAdminLogout">Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- MOBILE HEADER BAR (Visible only on screens <= 991px) -->
+      <div class="mobile-header-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="mobile-menu-btn" onclick="toggleMobileSidebar(true)" title="Menu">
+            <span>☰</span>
+          </button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img src="logo.png" alt="21" style="width:28px; height:28px; border-radius:50%; object-fit:contain;" />
+            <span style="font-family:'Playfair Display', serif; font-size:1.15rem; font-weight:700; letter-spacing:0.1em; color:#fff;">21</span>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="status-badge-live" style="padding:4px 8px; font-size:0.68rem;">
+            <div class="status-dot"></div>
+            <span id="mobileStoreStatusLabel">LIVE</span>
+          </div>
+          <button type="button" class="lang-toggle-btn" id="mobileLangToggle" style="padding:5px 12px; font-size:0.75rem;">العربية</button>
+        </div>
+      </div>
+
+      <!-- MOBILE QUICK TABS STRIP (Visible only on screens <= 991px) -->
+      <div class="mobile-tabs-strip">
+        <button type="button" class="mobile-tab-chip active" data-tab="overview" onclick="switchTab('overview')">
+          <span>📊</span> <span id="mNavOverview">Overview</span>
+        </button>
+        <button type="button" class="mobile-tab-chip" data-tab="orders" onclick="switchTab('orders')">
+          <span>🛒</span> <span id="mNavOrders">Orders</span>
+          <span class="nav-counter alert" id="mobileOrdersBadge" style="font-size:0.65rem; padding:1px 5px;">0</span>
+        </button>
+        <button type="button" class="mobile-tab-chip" data-tab="products" onclick="switchTab('products')">
+          <span>👕</span> <span id="mNavProducts">Hoodies</span>
+          <span class="nav-counter" id="mobileHoodiesBadge" style="font-size:0.65rem; padding:1px 5px;">6</span>
+        </button>
+        <button type="button" class="mobile-tab-chip" data-tab="content" onclick="switchTab('content')">
+          <span>📝</span> <span id="mNavContent">Texts</span>
+        </button>
+        <button type="button" class="mobile-tab-chip" data-tab="promos" onclick="switchTab('promos')">
+          <span>🏷️</span> <span id="mNavPromos">Promos</span>
+        </button>
+        <button type="button" class="mobile-tab-chip" data-tab="shipping" onclick="switchTab('shipping')">
+          <span>🚚</span> <span id="mNavShipping">Shipping</span>
+        </button>
+        <button type="button" class="mobile-tab-chip" data-tab="sizeguide" onclick="switchTab('sizeguide')">
+          <span>📏</span> <span id="mNavSizeGuide">Size Guide</span>
+        </button>
+        <button type="button" class="mobile-tab-chip" data-tab="settings" onclick="switchTab('settings')">
+          <span>⚙️</span> <span id="mNavSettings">Settings</span>
+        </button>
+      </div>
+
+      <header class="topbar">
+        <div class="topbar-title">
+          <span id="currentTabTitle">Brand Overview</span>
+        </div>
+        <div class="topbar-actions">
+          <div class="status-badge-live">
+            <div class="status-dot"></div>
+            <span id="storeStatusLabel">STORE LIVE</span>
+          </div>
+          <button class="lang-toggle-btn" id="langToggle">العربية</button>
+        </div>
+      </header>
 
     <main class="content-area">
       <!-- TAB 1: OVERVIEW -->
@@ -349,18 +568,31 @@
               <button class="btn btn-primary" id="btnOpenAddProduct" onclick="showProductEditor(false)">+ Add New Hoodie</button>
             </div>
           </div>
+
+          <!-- Order & Sequence Guidance Bar -->
+          <div style="background: rgba(232, 227, 216, 0.04); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--accent);">
+              <span>💡</span>
+              <span id="txtOrderNotice">ترتيب المنتجات هنا يحدد ما يظهر أولاً للعميل في واجهة المتجر. استخدم الأسهم (▲ / ▼) أو السحب لنقل المنتج للمقدمة.</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="resetDefaultOrder()" style="font-size: 0.72rem; padding: 4px 10px;">
+              🔄 <span id="btnResetOrder">Reset Order</span>
+            </button>
+          </div>
+
           <div class="table-container">
             <table>
               <thead>
                 <tr>
-                  <th>Preview</th>
-                  <th>Hoodie Name</th>
-                  <th>Badge</th>
-                  <th>Price (EGP)</th>
-                  <th>Sizes Stock</th>
-                  <th>Total Stock</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th style="width: 120px;" id="thProductOrder">Order / الترتيب</th>
+                  <th id="thProductPreview">Preview</th>
+                  <th id="thProductName">Hoodie Name</th>
+                  <th id="thProductBadge">Badge</th>
+                  <th id="thProductPrice">Price (EGP)</th>
+                  <th id="thProductSizes">Sizes Stock</th>
+                  <th id="thProductTotalStock">Total Stock</th>
+                  <th id="thProductStatus">Status</th>
+                  <th id="thProductActions">Actions</th>
                 </tr>
               </thead>
               <tbody id="productsTableBody"></tbody>
@@ -431,6 +663,10 @@
                     <option value="none">None (بدون جدول)</option>
                   </select>
                 </div>
+                <div class="form-group">
+                  <label class="form-label" id="lblProdSortOrder">Display Order (ترتيب الظهور في المتجر)</label>
+                  <input type="number" class="form-input" id="prodSortOrder" min="1" placeholder="e.g. 1 (يظهر أولاً)" title="1 means first product on storefront" />
+                </div>
               </div>
 
               <h4 style="font-size: 0.88rem; color: var(--accent); margin: 26px 0 14px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); padding-bottom: 6px;" id="secStockInfo">
@@ -438,7 +674,7 @@
               </h4>
               <div class="form-group">
                 <label class="form-label">Available pieces per size (S / M / L / XL / XXL)</label>
-                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(58px, 1fr)); gap: 8px;">
                   <div style="background: var(--surface-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center;">
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">S</span>
                     <input type="number" class="form-input" id="sizeS" value="10" min="0" style="text-align: center;" />
@@ -937,7 +1173,10 @@
         bottomGuideHeader: '2. Bottoms: Pants & Sweatpants (البنطلون وسويت بانتس)',
         lblAdminUser: 'Admin Username (اسم المستخدم)',
         lblAdminPass: 'Admin Password (كلمة المرور)',
-        btnAdminLogout: 'Sign Out (تسجيل الخروج)'
+        btnAdminLogout: 'Sign Out (تسجيل الخروج)',
+        thProductOrder: 'Order / Rank',
+        txtOrderNotice: 'Product order here defines appearance sequence on the storefront. Use (▲ / ▼) arrows or drag rows to position items.',
+        btnResetOrder: 'Reset Order'
       },
       ar: {
         controlPanel: 'لوحة تحكم البراند', overview: 'نظرة عامة', orders: 'الطلبات',
@@ -973,7 +1212,10 @@
         bottomGuideHeader: '2. مقاسات البنطلون وسويت بانتس (سم)',
         lblAdminUser: 'اسم المستخدم',
         lblAdminPass: 'كلمة المرور',
-        btnAdminLogout: 'تسجيل الخروج'
+        btnAdminLogout: 'تسجيل الخروج',
+        thProductOrder: 'الترتيب في المتجر',
+        txtOrderNotice: 'ترتيب المنتجات هنا يحدد ما يظهر أولاً للعميل في واجهة المتجر. استخدم الأسهم (▲ / ▼) أو السحب لتحديد ما يظهر أولاً.',
+        btnResetOrder: 'استعادة الترتيب الأصلي'
       }
     };
 
@@ -1000,6 +1242,18 @@
       document.getElementById('storeStatusLabel').textContent = t.storeLive;
       document.getElementById('langToggle').textContent = t.toggleLangBtn;
 
+      // Mobile Bar translations
+      if (document.getElementById('mobileStoreStatusLabel')) document.getElementById('mobileStoreStatusLabel').textContent = currentLang === 'ar' ? 'يعمل 🟢' : 'LIVE';
+      if (document.getElementById('mobileLangToggle')) document.getElementById('mobileLangToggle').textContent = t.toggleLangBtn;
+      if (document.getElementById('mNavOverview')) document.getElementById('mNavOverview').textContent = t.overview;
+      if (document.getElementById('mNavOrders')) document.getElementById('mNavOrders').textContent = t.orders;
+      if (document.getElementById('mNavProducts')) document.getElementById('mNavProducts').textContent = t.hoodies;
+      if (document.getElementById('mNavContent')) document.getElementById('mNavContent').textContent = t.content;
+      if (document.getElementById('mNavPromos')) document.getElementById('mNavPromos').textContent = t.promos;
+      if (document.getElementById('mNavShipping')) document.getElementById('mNavShipping').textContent = t.shipping;
+      if (document.getElementById('mNavSizeGuide')) document.getElementById('mNavSizeGuide').textContent = t.sizeguide;
+      if (document.getElementById('mNavSettings')) document.getElementById('mNavSettings').textContent = t.settings;
+
       document.getElementById('thOrderId').textContent = t.orderId;
       document.getElementById('thCustomer').textContent = t.customer;
       document.getElementById('thGovernorate').textContent = t.gov;
@@ -1009,6 +1263,10 @@
       document.getElementById('thAction').textContent = t.actions;
 
       if (document.getElementById('txtProductsTitle')) document.getElementById('txtProductsTitle').textContent = t.txtProductsTitle;
+      if (document.getElementById('thProductOrder')) document.getElementById('thProductOrder').textContent = t.thProductOrder;
+      if (document.getElementById('txtOrderNotice')) document.getElementById('txtOrderNotice').textContent = t.txtOrderNotice;
+      if (document.getElementById('btnResetOrder')) document.getElementById('btnResetOrder').textContent = t.btnResetOrder;
+
       if (document.getElementById('btnOpenAddProduct')) document.getElementById('btnOpenAddProduct').textContent = t.btnOpenAddProduct;
       if (document.getElementById('btnBackToHoodies')) document.getElementById('btnBackToHoodies').textContent = t.btnBackToHoodies;
       if (document.getElementById('btnCancelEdit')) document.getElementById('btnCancelEdit').textContent = t.btnCancel;
@@ -1022,6 +1280,7 @@
       if (document.getElementById('lblProdBadge')) document.getElementById('lblProdBadge').textContent = t.lblProdBadge;
       if (document.getElementById('lblProdFit')) document.getElementById('lblProdFit').textContent = t.lblProdFit;
       if (document.getElementById('lblProdSizeGuide')) document.getElementById('lblProdSizeGuide').textContent = t.lblProdSizeGuide;
+      if (document.getElementById('lblProdSortOrder')) document.getElementById('lblProdSortOrder').textContent = currentLang === 'ar' ? 'ترتيب الظهور في المتجر (1 = يظهر أولاً)' : 'Display Order (1 = First)';
       if (document.getElementById('secStockInfo')) document.getElementById('secStockInfo').textContent = t.secStockInfo;
       if (document.getElementById('secColorsInfo')) document.getElementById('secColorsInfo').textContent = t.secColorsInfo;
       if (document.getElementById('lblColorVariants')) document.getElementById('lblColorVariants').textContent = t.lblColorVariants;
@@ -1044,6 +1303,34 @@
       renderAll();
     });
 
+    const mobLangToggle = document.getElementById('mobileLangToggle');
+    if (mobLangToggle) {
+      mobLangToggle.addEventListener('click', () => {
+        currentLang = currentLang === 'en' ? 'ar' : 'en';
+        updateLanguageUI();
+        renderAll();
+      });
+    }
+
+    function toggleMobileSidebar(open) {
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (!sidebar) return;
+      if (open) {
+        sidebar.classList.add('open');
+        if (backdrop) backdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      } else {
+        sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+
+    function closeMobileSidebar() {
+      toggleMobileSidebar(false);
+    }
+
     function switchTab(tabId) {
       if (typeof hideProductEditor === 'function') {
         hideProductEditor();
@@ -1051,13 +1338,17 @@
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.toggle('active', item.dataset.tab === tabId);
       });
+      document.querySelectorAll('.mobile-tab-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.tab === tabId);
+      });
       document.querySelectorAll('.tab-view').forEach(view => {
         view.classList.toggle('active', view.id === 'tab-' + tabId);
       });
+      closeMobileSidebar();
       const titles = {
         overview: currentLang === 'ar' ? 'نظرة عامة على البراند' : 'Brand Overview',
         orders: currentLang === 'ar' ? 'إدارة الطلبات والشحن' : 'Customer Orders',
-        products: currentLang === 'ar' ? 'كتالوج الهوديز والمخزون' : 'Hoodie Collection',
+        products: currentLang === 'ar' ? 'كتالوج وترتيب الهوديز' : 'Hoodie Collection & Order',
         content: currentLang === 'ar' ? 'تعديل نصوص ومحتوى الواجهة' : 'Storefront Content Editor',
         promos: currentLang === 'ar' ? 'أكواد الخصم والعروض' : 'Promo Codes',
         shipping: currentLang === 'ar' ? 'أسعار الشحن للمحافظات' : 'Shipping Rates',
@@ -1152,6 +1443,8 @@
       const pendingCount = orders.filter(o => o.status === 'pending').length;
       document.getElementById('kpiTotalOrders').textContent = orders.length;
       document.getElementById('ordersPendingBadge').textContent = pendingCount;
+      const mobOrd = document.getElementById('mobileOrdersBadge');
+      if (mobOrd) mobOrd.textContent = pendingCount;
       document.getElementById('kpiPendingText').textContent = `${pendingCount} ${currentLang === 'ar' ? 'طلب بانتظار التأكيد' : 'pending confirmation'}`;
 
       let totalStock = 0;
@@ -1162,6 +1455,8 @@
       });
       document.getElementById('kpiTotalStock').textContent = totalStock + ' pcs';
       document.getElementById('hoodiesCountBadge').textContent = products.length;
+      const mobHood = document.getElementById('mobileHoodiesBadge');
+      if (mobHood) mobHood.textContent = products.length;
 
       const aov = orders.length ? Math.round(confirmedSales / orders.length) : 0;
       document.getElementById('kpiAov').textContent = aov.toLocaleString() + ' EGP';
@@ -1336,19 +1631,32 @@
       if (!tbody) return;
 
       if (!products.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:32px;">No hoodies found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:32px;">No hoodies found</td></tr>';
         return;
       }
 
-      tbody.innerHTML = products.map(p => {
+      tbody.innerHTML = products.map((p, idx) => {
         const variants = p.colorVariants || [];
         const firstVariantWithImg = variants.find(v => v.images && v.images.length > 0);
         const thumbImg = (firstVariantWithImg && firstVariantWithImg.images[0]) || p.image || null;
         const totalPhotos = variants.reduce((acc, v) => acc + ((v.images && v.images.length) || 0), 0) || (p.image ? 1 : 0);
         const sizesSum = p.sizes ? Object.values(p.sizes).reduce((a, b) => a + Number(b), 0) : 0;
         const isLow = sizesSum < 10;
+        const isFirst = idx === 0;
         return `
-          <tr>
+          <tr draggable="true" data-pid="${p.id}" data-idx="${idx}">
+            <td>
+              <div class="order-cell-wrap">
+                <span class="drag-handle" title="${currentLang === 'ar' ? 'اسحب لتغيير الترتيب' : 'Drag to reorder'}" draggable="false">⋮⋮</span>
+                <span class="order-rank-badge ${isFirst ? 'first' : ''}" title="${isFirst ? (currentLang === 'ar' ? 'أول قطعة تظهر في المتجر 👑' : 'First item in store 👑') : '#' + (idx + 1)}">
+                  #${idx + 1}
+                </span>
+                <div class="order-btn-group">
+                  <button type="button" class="btn-order-move" onclick="moveProductOrder(${idx}, -1)" ${isFirst ? 'disabled' : ''} title="${currentLang === 'ar' ? 'تحريك للأعلى (عرض قبل)' : 'Move Up'}">▲</button>
+                  <button type="button" class="btn-order-move" onclick="moveProductOrder(${idx}, 1)" ${idx === products.length - 1 ? 'disabled' : ''} title="${currentLang === 'ar' ? 'تحريك للأسفل (عرض بعد)' : 'Move Down'}">▼</button>
+                </div>
+              </div>
+            </td>
             <td>
               <div class="product-thumb">
                 ${thumbImg ? `<img src="${thumbImg}" alt="${escapeHtml(p.name)}" />` : `
@@ -1360,7 +1668,10 @@
               </div>
             </td>
             <td>
-              <strong>${escapeHtml(p.name)}</strong><br/>
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <strong>${escapeHtml(p.name)}</strong>
+                ${isFirst ? `<span style="font-size:0.68rem; background:rgba(232, 227, 216, 0.15); color:var(--accent); border:1px solid rgba(232, 227, 216, 0.3); padding:2px 7px; border-radius:10px; font-weight:600;">${currentLang === 'ar' ? '👑 الأول في المتجر' : '👑 1st in Store'}</span>` : ''}
+              </div>
               <span style="font-size:0.75rem; color:var(--text-dim)">${escapeHtml(p.fit || 'Oversized')}</span>
               ${variants.length ? `
                 <div style="display:flex; gap:5px; align-items:center; margin-top:5px; flex-wrap:wrap;">
@@ -1377,7 +1688,7 @@
               ${p.originalPrice ? `<br/><s style="font-size:0.75rem; color:var(--text-dim)">${p.originalPrice.toLocaleString()} EGP</s>` : ''}
             </td>
             <td>
-              <div style="display:flex; gap:6px; font-size:0.75rem;">
+              <div style="display:flex; gap:6px; font-size:0.75rem; flex-wrap:wrap;">
                 ${['S','M','L','XL','XXL'].map(sz => `
                   <span style="background:var(--surface-light); padding:2px 6px; border-radius:4px; border:1px solid var(--border)">
                     ${sz}:${p.sizes ? (p.sizes[sz] || 0) : 0}
@@ -1395,7 +1706,7 @@
               </span>
             </td>
             <td>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:6px; flex-wrap:nowrap;">
                 <button class="btn btn-secondary btn-sm" onclick="showProductEditor(true, ${p.id})">Edit</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">Delete</button>
               </div>
@@ -1403,6 +1714,81 @@
           </tr>
         `;
       }).join('');
+
+      setupProductDragAndDrop();
+    }
+
+    /* ── Product Sequence & Reordering Functions ── */
+    async function moveProductOrder(index, direction) {
+      const products = [...StoreDB.getProducts()];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= products.length) return;
+
+      const item = products.splice(index, 1)[0];
+      products.splice(targetIndex, 0, item);
+
+      await StoreDB.saveProductOrder(products);
+      renderProducts();
+
+      const msg = currentLang === 'ar'
+        ? `تم نقل "${item.name}" إلى الترتيب #${targetIndex + 1} (${targetIndex === 0 ? '👑 يظهر أولاً في المتجر' : ''})`
+        : `Moved "${item.name}" to position #${targetIndex + 1}`;
+      showToast(msg);
+    }
+
+    async function resetDefaultOrder() {
+      if (!confirm(currentLang === 'ar' ? 'هل تريد استعادة ترتيب المنتجات حسب المعرف الافتراضي؟' : 'Reset product ordering to default?')) return;
+      const products = [...StoreDB.getProducts()];
+      products.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+      await StoreDB.saveProductOrder(products);
+      renderProducts();
+      showToast(currentLang === 'ar' ? 'تمت استعادة الترتيب الافتراضي' : 'Order reset to default');
+    }
+
+    let draggedRowIdx = null;
+    function setupProductDragAndDrop() {
+      const tbody = document.getElementById('productsTableBody');
+      if (!tbody) return;
+      const rows = tbody.querySelectorAll('tr[draggable="true"]');
+      rows.forEach(row => {
+        row.addEventListener('dragstart', (e) => {
+          draggedRowIdx = Number(row.dataset.idx);
+          row.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => {
+          row.classList.remove('dragging');
+          rows.forEach(r => r.classList.remove('drag-over'));
+          draggedRowIdx = null;
+        });
+        row.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          rows.forEach(r => r.classList.remove('drag-over'));
+          row.classList.add('drag-over');
+        });
+        row.addEventListener('dragleave', () => {
+          row.classList.remove('drag-over');
+        });
+        row.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          row.classList.remove('drag-over');
+          const targetIdx = Number(row.dataset.idx);
+          if (draggedRowIdx === null || draggedRowIdx === targetIdx) return;
+
+          const products = [...StoreDB.getProducts()];
+          const item = products.splice(draggedRowIdx, 1)[0];
+          products.splice(targetIdx, 0, item);
+
+          await StoreDB.saveProductOrder(products);
+          renderProducts();
+
+          const msg = currentLang === 'ar'
+            ? `تم تغيير ترتيب "${item.name}" بنجاح ليصبح #${targetIdx + 1}`
+            : `Reordered "${item.name}" to #${targetIdx + 1}`;
+          showToast(msg);
+        });
+      });
     }
 
     /* ── Color Variants & Multiple Images Manager ── */
@@ -1566,6 +1952,10 @@
         if (form) form.reset();
         document.getElementById('prodEditId').value = '';
         if (document.getElementById('prodSizeGuide')) document.getElementById('prodSizeGuide').value = 'top';
+        if (document.getElementById('prodSortOrder')) {
+          const prods = StoreDB.getProducts();
+          document.getElementById('prodSortOrder').value = prods.length + 1;
+        }
         currentProductVariants = [
           { colorName: 'Midnight Black', colorHex: '#0a0a0a', images: [] }
         ];
@@ -1584,6 +1974,10 @@
         document.getElementById('prodFit').value = p.fit || '';
         document.getElementById('prodDesc').value = p.desc || '';
         if (document.getElementById('prodSizeGuide')) document.getElementById('prodSizeGuide').value = p.sizeGuideType || 'top';
+        if (document.getElementById('prodSortOrder')) {
+          const pIdx = products.findIndex(x => x.id == id);
+          document.getElementById('prodSortOrder').value = p.sortOrder !== undefined ? p.sortOrder : (pIdx + 1);
+        }
 
         if (p.colorVariants && p.colorVariants.length > 0) {
           currentProductVariants = JSON.parse(JSON.stringify(p.colorVariants));
@@ -1660,6 +2054,11 @@
         active: true
       };
 
+      const sortOrderInput = document.getElementById('prodSortOrder');
+      if (sortOrderInput && sortOrderInput.value) {
+        pData.sortOrder = Number(sortOrderInput.value);
+      }
+
       await StoreDB.saveProduct(pData, editId);
       hideProductEditor();
       showToast(editId ? (currentLang === 'ar' ? 'تم تحديث الهودي بنجاح' : 'Hoodie updated successfully') : (currentLang === 'ar' ? 'تمت إضافة الهودي للمتجر' : 'New hoodie added to collection'));
@@ -1667,9 +2066,10 @@
     }
 
     async function deleteProduct(id) {
-      if (!confirm('Are you sure you want to remove this hoodie from the store?')) return;
+      const msg = currentLang === 'ar' ? 'هل أنت متأكد من حذف هذا الهودي من المتجر؟' : 'Are you sure you want to remove this hoodie from the store?';
+      if (!confirm(msg)) return;
       await StoreDB.deleteProduct(id);
-      showToast('Hoodie removed');
+      showToast(currentLang === 'ar' ? 'تم حذف الهودي بنجاح' : 'Hoodie removed');
       renderAll();
     }
 

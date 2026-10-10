@@ -4,6 +4,7 @@ const STORAGE_PREFIX = 'twentyone_';
 const DEFAULT_PRODUCTS = [
   {
     id: 1,
+    sortOrder: 1,
     name: "Midnight Drop Hoodie",
     price: 1250,
     originalPrice: 1450,
@@ -23,6 +24,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     id: 2,
+    sortOrder: 2,
     name: "Ash Classic Hoodie",
     price: 1150,
     originalPrice: 1300,
@@ -42,6 +44,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     id: 3,
+    sortOrder: 3,
     name: "Stone Desert Oversized",
     price: 1350,
     originalPrice: 1600,
@@ -61,6 +64,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     id: 4,
+    sortOrder: 4,
     name: "Chalk Essential Hoodie",
     price: 1100,
     originalPrice: 1250,
@@ -80,6 +84,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     id: 5,
+    sortOrder: 5,
     name: "Ink Heavyweight Zip-Up",
     price: 1450,
     originalPrice: 1700,
@@ -99,6 +104,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     id: 6,
+    sortOrder: 6,
     name: "Fog Relaxed Hoodie",
     price: 1200,
     originalPrice: 1350,
@@ -318,7 +324,13 @@ const StoreDB = {
   },
 
   // ── Products ──
-  getProducts() { return this.get('products', DEFAULT_PRODUCTS); },
+  getProducts() {
+    const list = this.get('products', DEFAULT_PRODUCTS);
+    if (Array.isArray(list) && list.some(p => p.sortOrder !== undefined)) {
+      return [...list].sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
+    }
+    return list;
+  },
   async saveProduct(pData, editId) {
     let prods = this.getProducts();
     let savedProd = null;
@@ -331,7 +343,8 @@ const StoreDB = {
       }
     } else {
       const newId = prods.length ? Math.max(...prods.map(p => p.id)) + 1 : 1;
-      savedProd = { id: newId, ...pData, active: true };
+      const nextSortOrder = prods.length ? Math.max(...prods.map(p => Number(p.sortOrder) || 0)) + 1 : 1;
+      savedProd = { id: newId, sortOrder: nextSortOrder, ...pData, active: true };
       prods.push(savedProd);
     }
 
@@ -359,9 +372,33 @@ const StoreDB = {
     return savedProd;
   },
 
+  async saveProductOrder(newProds) {
+    newProds.forEach((p, idx) => {
+      p.sortOrder = idx + 1;
+    });
+    this.set('products', newProds);
+
+    if (this.hasBackend) {
+      try {
+        await fetch('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProds)
+        });
+      } catch(e) {
+        console.error('Failed to sync reordered products:', e);
+      }
+    }
+    return newProds;
+  },
+
   async deleteProduct(id) {
     let prods = this.getProducts();
     prods = prods.filter(x => x.id != id);
+    // Re-index remaining products sortOrder
+    prods.forEach((p, idx) => {
+      p.sortOrder = idx + 1;
+    });
     this.set('products', prods);
 
     if (this.hasBackend) {
