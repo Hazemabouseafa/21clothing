@@ -121,6 +121,26 @@ const DEFAULT_PRODUCTS = [
     sizes: { S: 9, M: 14, L: 17, XL: 7, XXL: 3 },
     desc: "Subtle muted fog tone, seamless shoulder drop, vintage garment dyed finish.",
     active: true
+  },
+  {
+    id: 7,
+    sortOrder: 7,
+    name: "Onyx Acid Wash Hoodie",
+    price: 1399,
+    originalPrice: 1599,
+    badge: "Limited",
+    fit: "Boxy Fit 460 GSM",
+    colorTheme: "black",
+    colors: ["#1c1c1c", "#2d2d2d"],
+    svgFill: "#222222",
+    accent: "#444444",
+    image: null,
+    colorVariants: [
+      { colorName: "Midnight Black", colorHex: "#1c1c1c", images: [] }
+    ],
+    sizes: { S: 5, M: 10, L: 15, XL: 8, XXL: 4 },
+    desc: "Vintage acid wash finish, custom heavy ribbing, dropped shoulders.",
+    active: true
   }
 ];
 
@@ -262,6 +282,45 @@ const DEFAULT_CONTENT = {
 const StoreDB = {
   hasBackend: false,
 
+  getNeonUrl() {
+    try {
+      return localStorage.getItem(STORAGE_PREFIX + 'neon_url') || '';
+    } catch (e) {
+      return '';
+    }
+  },
+
+  setNeonUrl(url) {
+    try {
+      if (url && url.trim()) {
+        localStorage.setItem(STORAGE_PREFIX + 'neon_url', url.trim());
+      } else {
+        localStorage.removeItem(STORAGE_PREFIX + 'neon_url');
+      }
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('storedb_neon_change', { detail: { url } }));
+      }
+    } catch (e) {}
+  },
+
+  fetchApi(endpoint, options = {}) {
+    const headers = { ...(options.headers || {}) };
+    const neonUrl = this.getNeonUrl();
+    if (neonUrl) {
+      headers['x-database-url'] = neonUrl;
+    }
+    headers['Cache-Control'] = 'no-cache';
+    headers['Pragma'] = 'no-cache';
+
+    let targetUrl = endpoint;
+    if (!options.method || options.method.toUpperCase() === 'GET') {
+      const sep = targetUrl.includes('?') ? '&' : '?';
+      targetUrl += sep + '_t=' + Date.now();
+    }
+
+    return fetch(targetUrl, { ...options, headers });
+  },
+
   get(key, fallback) {
     try {
       const v = localStorage.getItem(STORAGE_PREFIX + key);
@@ -290,41 +349,84 @@ const StoreDB = {
     if (typeof window === 'undefined' || !window.location.protocol.startsWith('http')) return;
     try {
       const [pRes, oRes, prRes, shRes, stRes, cRes, sgRes] = await Promise.allSettled([
-        fetch('/api/products'),
-        fetch('/api/orders'),
-        fetch('/api/promos'),
-        fetch('/api/shipping'),
-        fetch('/api/settings'),
-        fetch('/api/content'),
-        fetch('/api/size-guides')
+        this.fetchApi('/api/products'),
+        this.fetchApi('/api/orders'),
+        this.fetchApi('/api/promos'),
+        this.fetchApi('/api/shipping'),
+        this.fetchApi('/api/settings'),
+        this.fetchApi('/api/content'),
+        this.fetchApi('/api/size-guides')
       ]);
 
       let anySuccess = false;
 
+      // Check if backend indicates live cloud database (Neon) is active
+      const isCloudConnected = (pRes.status === 'fulfilled' && pRes.value.headers && pRes.value.headers.get('x-db-connected') === 'true');
+
       if (pRes.status === 'fulfilled' && pRes.value.ok) {
         anySuccess = true;
-        this.set('products', await pRes.value.json());
+        const remoteProducts = await pRes.value.json();
+        const localProducts = this.get('products', []);
+
+        if (isCloudConnected) {
+          // Live Neon Postgres is single source of truth across all devices
+          this.set('products', remoteProducts);
+        } else {
+          // Serverless local fallback mode:
+          // Protect locally created/custom products against being wiped by static backend defaults
+          if (Array.isArray(remoteProducts)) {
+            if (!localProducts || localProducts.length === 0) {
+              this.set('products', remoteProducts);
+            } else if (remoteProducts.length >= localProducts.length) {
+              this.set('products', remoteProducts);
+            } else {
+              console.log('[StoreDB] Preserving local custom products against backend fallback defaults');
+            }
+          }
+        }
       }
+
       if (oRes.status === 'fulfilled' && oRes.value.ok) {
         anySuccess = true;
-        this.set('orders', await oRes.value.json());
+        const remoteOrders = await oRes.value.json();
+        const localOrders = this.get('orders', []);
+        if (isCloudConnected || !localOrders || !localOrders.length || remoteOrders.length >= localOrders.length) {
+          this.set('orders', remoteOrders);
+        }
       }
+
       if (prRes.status === 'fulfilled' && prRes.value.ok) {
         anySuccess = true;
         this.set('promos', await prRes.value.json());
       }
+
       if (shRes.status === 'fulfilled' && shRes.value.ok) {
         anySuccess = true;
         this.set('shipping', await shRes.value.json());
       }
+
       if (stRes.status === 'fulfilled' && stRes.value.ok) {
         anySuccess = true;
-        this.set('settings', await stRes.value.json());
+        const remoteSettings = await stRes.value.json();
+        const localSettings = this.get('settings', {});
+        if (isCloudConnected) {
+          this.set('settings', remoteSettings);
+        } else {
+          this.set('settings', { ...remoteSettings, ...localSettings });
+        }
       }
+
       if (cRes.status === 'fulfilled' && cRes.value.ok) {
         anySuccess = true;
-        this.set('content', await cRes.value.json());
+        const remoteContent = await cRes.value.json();
+        const localContent = this.get('content', {});
+        if (isCloudConnected) {
+          this.set('content', remoteContent);
+        } else {
+          this.set('content', { ...remoteContent, ...localContent });
+        }
       }
+
       if (sgRes.status === 'fulfilled' && sgRes.value.ok) {
         anySuccess = true;
         this.set('sizeGuides', await sgRes.value.json());
@@ -339,6 +441,28 @@ const StoreDB = {
       }
     } catch (e) {
       console.error('[StoreDB sync error]', e);
+    }
+  },
+
+  async syncAllToCloud() {
+    const bundle = {
+      products: this.getProducts(),
+      orders: this.getOrders(),
+      promos: this.getPromos(),
+      shipping: this.getShipping(),
+      settings: this.getSettings(),
+      content: this.getContent(),
+      sizeGuides: this.getSizeGuides()
+    };
+    try {
+      const res = await this.fetchApi('/api/neon-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bundle)
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, error: e.message };
     }
   },
 
@@ -386,13 +510,13 @@ const StoreDB = {
     if (this.isOnline()) {
       try {
         if (editId) {
-          await fetch(`/api/products/${editId}`, {
+          await this.fetchApi(`/api/products/${editId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(savedProd)
           });
         } else {
-          await fetch('/api/products', {
+          await this.fetchApi('/api/products', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(savedProd)
@@ -413,7 +537,7 @@ const StoreDB = {
 
     if (this.isOnline()) {
       try {
-        await fetch('/api/products', {
+        await this.fetchApi('/api/products', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newProds)
@@ -436,7 +560,7 @@ const StoreDB = {
 
     if (this.isOnline()) {
       try {
-        await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        await this.fetchApi(`/api/products/${id}`, { method: 'DELETE' });
       } catch(e) {
         console.error('Failed to delete product on backend:', e);
       }
@@ -464,7 +588,7 @@ const StoreDB = {
 
     if (this.isOnline()) {
       try {
-        await fetch('/api/orders', {
+        await this.fetchApi('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(order)
@@ -485,7 +609,7 @@ const StoreDB = {
 
       if (this.isOnline()) {
         try {
-          await fetch(`/api/orders/${id}`, {
+          await this.fetchApi(`/api/orders/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })
@@ -504,7 +628,7 @@ const StoreDB = {
 
     if (this.isOnline()) {
       try {
-        await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+        await this.fetchApi(`/api/orders/${id}`, { method: 'DELETE' });
       } catch(e) {
         console.error(e);
       }
@@ -517,7 +641,7 @@ const StoreDB = {
     this.set('promos', pms);
     if (this.isOnline()) {
       try {
-        await fetch('/api/promos', {
+        await this.fetchApi('/api/promos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(pms)
@@ -534,7 +658,7 @@ const StoreDB = {
     this.set('shipping', shp);
     if (this.isOnline()) {
       try {
-        await fetch('/api/shipping', {
+        await this.fetchApi('/api/shipping', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(shp)
@@ -551,7 +675,7 @@ const StoreDB = {
     this.set('settings', stg);
     if (this.isOnline()) {
       try {
-        await fetch('/api/settings', {
+        await this.fetchApi('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(stg)
@@ -568,7 +692,7 @@ const StoreDB = {
     this.set('content', cnt);
     if (this.isOnline()) {
       try {
-        await fetch('/api/content', {
+        await this.fetchApi('/api/content', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(cnt)
@@ -585,7 +709,7 @@ const StoreDB = {
     this.set('sizeGuides', sg);
     if (this.isOnline()) {
       try {
-        await fetch('/api/size-guides', {
+        await this.fetchApi('/api/size-guides', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(sg)
@@ -607,7 +731,7 @@ const StoreDB = {
 
     if (this.hasBackend) {
       try {
-        const res = await fetch('/api/auth/login', {
+        const res = await this.fetchApi('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })

@@ -77,8 +77,8 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  const dbInfo = getDatabaseInfo();
+server.listen(PORT, '0.0.0.0', async () => {
+  const dbInfo = await getDatabaseInfo();
   console.log(`===============================================`);
   console.log(` 21 — TWENTY ONE CLOTHING SERVER IS LIVE! 🚀`);
   console.log(` Storefront:  http://localhost:${PORT}`);

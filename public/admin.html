@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>21 — Brand Control Panel | لوحة التحكم</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -886,18 +889,57 @@
             <div class="panel-title"><span>⚙️</span> <span id="txtSettingsTitle">Storefront & Meta Ads Settings</span></div>
           </div>
           <div style="padding: 24px;">
-            <!-- Database Connection Status Card -->
-            <div id="dbStatusCard" style="display: flex; align-items: center; justify-content: space-between; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 14px 18px; margin-bottom: 22px; flex-wrap: wrap; gap: 10px;">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 1.5rem;" id="dbStatusIcon">⚡</span>
-                <div>
-                  <div style="font-weight: 600; font-size: 0.9rem; color: #fff;" id="dbStatusTitle">Neon Database: Checking...</div>
-                  <div style="font-size: 0.75rem; color: var(--text-dim);" id="dbStatusSubtitle">Connecting to backend...</div>
+            <!-- Database Connection Status & Neon Cloud Manager Card -->
+            <div id="dbStatusCard" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 18px 20px; margin-bottom: 22px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 1.6rem;" id="dbStatusIcon">⚡</span>
+                  <div>
+                    <div style="font-weight: 600; font-size: 0.95rem; color: #fff;" id="dbStatusTitle">Neon Database: Checking...</div>
+                    <div style="font-size: 0.78rem; color: var(--text-dim);" id="dbStatusSubtitle">Connecting to backend...</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="status-pill delivered" id="dbStatusBadge">Checking</span>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="checkDatabaseStatus(true)" style="padding: 4px 10px; font-size: 0.75rem;" title="Refresh database status">🔄</button>
                 </div>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="status-pill delivered" id="dbStatusBadge">Online</span>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="checkDatabaseStatus(true)" style="padding: 4px 10px; font-size: 0.75rem;" title="Refresh database status">🔄</button>
+
+              <!-- Neon Cloud Action Buttons & Configuration Section -->
+              <div id="dbActionSection" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                <!-- When connected: Push Local Data to Neon button -->
+                <div id="dbConnectedActions" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                  <span style="font-size: 0.8rem; color: #10b981;">
+                    ✦ متصل بقاعدة بيانات Neon السحابية! أي تعديل أو منتج جديد يظهر فوراً على الموبايل والكمبيوتر.
+                  </span>
+                  <button type="button" class="btn btn-sm btn-primary" onclick="pushLocalDataToNeon()" id="btnPushToNeon" style="font-size: 0.75rem;">
+                    🚀 مزامنة كل البيانات المحلية إلى نيون السحابية
+                  </button>
+                </div>
+
+                <!-- When NOT connected: Direct input to connect + instructions -->
+                <div id="dbNotConnectedActions" style="display: none;">
+                  <p style="font-size: 0.8rem; color: #fbbf24; margin-bottom: 10px;">
+                    ⚠️ لوحة التحكم تعمل في <b>الوضع المحلي</b>. لربط قاعدة بيانات Neon السحابية ومزامنة المنتجات مع الموبايل:
+                  </p>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <input type="text" class="form-input" id="neonUrlInput" placeholder="رابط اتصال Neon: postgresql://user:pass@ep-xxxx.neon.tech/21clothing?sslmode=require" style="flex: 1; min-width: 260px; font-size: 0.78rem;" />
+                    <button type="button" class="btn btn-sm btn-primary" onclick="saveAndConnectNeon()" id="btnConnectNeon" style="white-space: nowrap; font-size: 0.78rem;">
+                      ⚡ ربط واختبار الآن
+                    </button>
+                  </div>
+                  <details style="font-size: 0.76rem; color: var(--text-dim); background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                    <summary style="cursor: pointer; color: var(--accent); font-weight: 500;">📖 طريقة ربط Neon على Vercel بضغطة واحدة (دائم لجميع الزوار)</summary>
+                    <div style="margin-top: 8px; line-height: 1.6;">
+                      1. افتح مشروعك في <b>Vercel Dashboard</b><br/>
+                      2. ادخل على <b>Settings</b> ثم <b>Environment Variables</b><br/>
+                      3. أضف متغير جديد باسم: <code style="color:#60a5fa;">DATABASE_URL</code><br/>
+                      4. ضع فيه رابط اتصال نيون الخاص بك (مع <code style="color:#60a5fa;">?sslmode=require</code>)<br/>
+                      5. اضغط <b>Save</b> ثم اعمل <b>Redeploy</b> للمشروع.<br/>
+                      سيتم ربط قاعدة البيانات تلقائياً لجميع زوار المتجر على الموبايل والديسكتوب!
+                    </div>
+                  </details>
+                </div>
               </div>
             </div>
 
@@ -1181,7 +1223,7 @@
 
   <div class="admin-toast" id="adminToast">Action completed</div>
   <!-- Shared Data Script -->
-  <script src="shared.js"></script>
+  <script src="shared.js?v=21.3"></script>
 
   <!-- Admin Controller -->
   <script>
@@ -2286,20 +2328,27 @@
     /* ── Settings (including Meta Pixel & Neon Status) ── */
     async function checkDatabaseStatus(showNotification = false) {
       try {
-        const res = await fetch('/api/status');
+        const res = await StoreDB.fetchApi('/api/status');
         if (res.ok) {
           const data = await res.json();
           const db = data.database || {};
-          const isNeon = db.connected;
+          const isNeon = Boolean(db.connected);
           const title = document.getElementById('dbStatusTitle');
           const sub = document.getElementById('dbStatusSubtitle');
           const badge = document.getElementById('dbStatusBadge');
           const card = document.getElementById('dbStatusCard');
           const icon = document.getElementById('dbStatusIcon');
+          const connectedActions = document.getElementById('dbConnectedActions');
+          const notConnectedActions = document.getElementById('dbNotConnectedActions');
+          const neonInput = document.getElementById('neonUrlInput');
+
+          if (neonInput && !neonInput.value && StoreDB.getNeonUrl()) {
+            neonInput.value = StoreDB.getNeonUrl();
+          }
 
           if (isNeon) {
-            if (title) title.textContent = currentLang === 'ar' ? `قاعدة بيانات نيون (Neon): متصلة بنجاح` : `Neon Postgres: Connected`;
-            if (sub) sub.textContent = currentLang === 'ar' ? `قاعدة البيانات: ${db.name || '21clothing'} — استضافة سحابية Vercel + Neon` : `Database: ${db.name || '21clothing'} on ${db.host || 'neon.tech'}`;
+            if (title) title.textContent = currentLang === 'ar' ? `قاعدة بيانات نيون (Neon): متصلة بنجاح ⚡` : `Neon Postgres: Connected ⚡`;
+            if (sub) sub.textContent = currentLang === 'ar' ? `قاعدة البيانات: ${db.name || '21clothing'} — متصل سحابياً مع Vercel (${data.stats?.productsCount || 0} منتجات)` : `Database: ${db.name || '21clothing'} on ${db.host || 'neon.tech'} (${data.stats?.productsCount || 0} products)`;
             if (badge) {
               badge.textContent = 'Neon Live 🟢';
               badge.className = 'status-pill delivered';
@@ -2309,10 +2358,12 @@
               card.style.borderColor = 'rgba(16, 185, 129, 0.3)';
             }
             if (icon) icon.textContent = '⚡';
+            if (connectedActions) connectedActions.style.display = 'flex';
+            if (notConnectedActions) notConnectedActions.style.display = 'none';
             if (showNotification) showToast(currentLang === 'ar' ? 'متصل بقاعدة بيانات Neon السحابية' : 'Connected to Neon Serverless Postgres');
           } else {
             if (title) title.textContent = currentLang === 'ar' ? 'وضع التخزين المحلي (Local Storage)' : 'Local Storage Mode';
-            if (sub) sub.textContent = currentLang === 'ar' ? 'لربط قاعدة بيانات Neon السحابية، أضف متغير DATABASE_URL في Vercel أو .env' : 'To enable cloud database, configure DATABASE_URL in Vercel or .env';
+            if (sub) sub.textContent = currentLang === 'ar' ? (db.error ? `خطأ في الاتصال: ${db.error}` : 'لربط قاعدة بيانات Neon السحابية ومزامنة الموبايل، أدخل الرابط أدناه أو أضف DATABASE_URL في Vercel') : (db.error ? `Error: ${db.error}` : 'To enable cloud database, configure DATABASE_URL in Vercel or input below');
             if (badge) {
               badge.textContent = 'Local 🟠';
               badge.className = 'status-pill pending';
@@ -2322,10 +2373,48 @@
               card.style.borderColor = 'rgba(234, 179, 8, 0.3)';
             }
             if (icon) icon.textContent = '💾';
+            if (connectedActions) connectedActions.style.display = 'none';
+            if (notConnectedActions) notConnectedActions.style.display = 'block';
             if (showNotification) showToast(currentLang === 'ar' ? 'يعمل في وضع التخزين المحلي' : 'Running in local storage mode');
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Database status error:', e);
+      }
+    }
+
+    async function saveAndConnectNeon() {
+      const input = document.getElementById('neonUrlInput');
+      const url = input ? input.value.trim() : '';
+      if (!url) {
+        showToast(currentLang === 'ar' ? 'يرجى إدخال رابط اتصال Neon' : 'Please enter Neon connection URL');
+        return;
+      }
+      StoreDB.setNeonUrl(url);
+      showToast(currentLang === 'ar' ? 'جاري اختبار الاتصال بقاعدة بيانات Neon...' : 'Testing Neon connection...');
+      await checkDatabaseStatus(true);
+      await pushLocalDataToNeon(true);
+    }
+
+    async function pushLocalDataToNeon(silent = false) {
+      const btn = document.getElementById('btnPushToNeon');
+      if (btn) btn.disabled = true;
+      try {
+        if (!silent) showToast(currentLang === 'ar' ? 'جاري رفع ومزامنة كل البيانات إلى نيون...' : 'Syncing data to Neon cloud...');
+        const res = await StoreDB.syncAllToCloud();
+        if (res && res.success) {
+          showToast(currentLang === 'ar' ? `تمت المزامنة بنجاح (${res.count} أقسام)!` : `Synced successfully (${res.count} categories)!`);
+          await StoreDB.syncWithBackend();
+          renderProductsTable();
+          renderOrdersTable();
+        } else {
+          showToast(currentLang === 'ar' ? `فشلت المزامنة: ${res.error || 'خطأ'}` : `Sync failed: ${res.error || 'Error'}`);
+        }
+      } catch (e) {
+        showToast(`Sync error: ${e.message}`);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
     }
 
     function loadStoreSettings() {
