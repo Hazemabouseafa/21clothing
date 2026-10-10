@@ -278,11 +278,12 @@
       </section>
       <!-- TAB 3: PRODUCTS (HOODIES) -->
       <section class="tab-view" id="tab-products">
-        <div class="panel">
+        <!-- Subview 1: Catalog List -->
+        <div id="productsListView" class="panel">
           <div class="panel-header">
             <div class="panel-title"><span>👕</span> <span id="txtProductsTitle">Hoodie Collection & Stock</span></div>
             <div class="panel-actions">
-              <button class="btn btn-primary" id="btnOpenAddProduct" onclick="openAddProductModal()">+ Add New Hoodie</button>
+              <button class="btn btn-primary" id="btnOpenAddProduct" onclick="showProductEditor(false)">+ Add New Hoodie</button>
             </div>
           </div>
           <div class="table-container">
@@ -301,6 +302,128 @@
               </thead>
               <tbody id="productsTableBody"></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Subview 2: In-Page Product Editor (Add / Edit) -->
+        <div id="productEditorView" class="panel" style="display: none; max-width: 960px; margin: 0 auto;">
+          <div class="panel-header" style="background: var(--surface-light); padding: 18px 24px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="hideProductEditor()" style="padding: 6px 14px; font-weight: 600;">
+                ← <span id="btnBackToHoodies">Back to Hoodies</span>
+              </button>
+              <div class="panel-title" style="margin: 0; font-size: 1.15rem;">
+                <span>👕</span> <span id="productEditorTitle">Add New Hoodie</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn-secondary" onclick="hideProductEditor()" id="btnCancelEdit">Cancel</button>
+              <button type="button" class="btn btn-primary" onclick="document.getElementById('formProduct').requestSubmit()" id="btnSaveProductTop">Save Hoodie</button>
+            </div>
+          </div>
+          
+          <div style="padding: 28px;">
+            <form id="formProduct" onsubmit="saveProduct(event)">
+              <input type="hidden" id="prodEditId" />
+
+              <h4 style="font-size: 0.88rem; color: var(--accent); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); padding-bottom: 6px;" id="secBasicInfo">
+                1. Basic Hoodie Information (معلومات الهودي الأساسية)
+              </h4>
+
+              <div class="form-group">
+                <label class="form-label" id="lblProdName">Hoodie Name (اسم الهودي)</label>
+                <input type="text" class="form-input" id="prodName" required placeholder="e.g. Cairo Midnight Heavyweight" style="font-size: 0.95rem; font-weight: 500;" />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" id="lblProdPrice">Price (سعر البيع EGP)</label>
+                  <input type="number" class="form-input" id="prodPrice" required placeholder="1250" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" id="lblProdOrigPrice">Compare At Price (السعر قبل الخصم EGP)</label>
+                  <input type="number" class="form-input" id="prodOriginalPrice" placeholder="1500" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" id="lblProdBadge">Badge / Tag (الشارة)</label>
+                  <select class="form-select" id="prodBadge">
+                    <option value="">None (بدون شارة)</option>
+                    <option value="New Drop">New Drop (إصدار جديد)</option>
+                    <option value="Bestseller">Bestseller (الأكثر مبيعاً)</option>
+                    <option value="Limited">Limited Edition (كمية محدودة)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" id="lblProdFit">Collection / Fit (القصة والوزن)</label>
+                  <input type="text" class="form-input" id="prodFit" placeholder="Oversized 450 GSM" />
+                </div>
+              </div>
+
+              <h4 style="font-size: 0.88rem; color: var(--accent); margin: 26px 0 14px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); padding-bottom: 6px;" id="secStockInfo">
+                2. Inventory by Sizes (المخزون حسب المقاسات)
+              </h4>
+              <div class="form-group">
+                <label class="form-label">Available pieces per size (S / M / L / XL / XXL)</label>
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+                  <div style="background: var(--surface-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">S</span>
+                    <input type="number" class="form-input" id="sizeS" value="10" min="0" style="text-align: center;" />
+                  </div>
+                  <div style="background: var(--surface-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">M</span>
+                    <input type="number" class="form-input" id="sizeM" value="15" min="0" style="text-align: center;" />
+                  </div>
+                  <div style="background: var(--surface-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">L</span>
+                    <input type="number" class="form-input" id="sizeL" value="20" min="0" style="text-align: center;" />
+                  </div>
+                  <div style="background: var(--surface-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">XL</span>
+                    <input type="number" class="form-input" id="sizeXL" value="15" min="0" style="text-align: center;" />
+                  </div>
+                  <div style="background: var(--surface-light); padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">XXL</span>
+                    <input type="number" class="form-input" id="sizeXXL" value="8" min="0" style="text-align: center;" />
+                  </div>
+                </div>
+              </div>
+
+              <h4 style="font-size: 0.88rem; color: var(--accent); margin: 26px 0 14px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); padding-bottom: 6px;" id="secColorsInfo">
+                3. Color Variants & Photo Galleries (الألوان وصور كل لون)
+              </h4>
+              <div class="form-group" style="border: 1px solid var(--border); border-radius: 8px; padding: 20px; background: rgba(255,255,255,0.015);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                  <div>
+                    <label class="form-label" style="margin: 0; font-weight: 600; color: var(--accent); font-size: 0.95rem;" id="lblColorVariants">
+                      🎨 Colors & Photos (ألوان المنتج وصور كل لون)
+                    </label>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;" id="lblColorVariantsHelp">
+                      Add color options and upload multiple photos for each color. Customers can switch between colors smoothly.
+                    </span>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="addColorVariant()" id="btnAddColorBtn">
+                    + Add Color (إضافة لون)
+                  </button>
+                </div>
+
+                <div id="variantsContainer" style="display: flex; flex-direction: column; gap: 14px;"></div>
+              </div>
+
+              <h4 style="font-size: 0.88rem; color: var(--accent); margin: 26px 0 14px; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); padding-bottom: 6px;" id="secFabricInfo">
+                4. Fabric & Material Details (تفاصيل الخامة والتصنيع)
+              </h4>
+              <div class="form-group">
+                <textarea class="form-textarea" id="prodDesc" rows="3" placeholder="100% Egyptian Cotton, French Terry 450 GSM, Pre-shrunk fit."></textarea>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border);">
+                <button type="button" class="btn btn-secondary" onclick="hideProductEditor()" id="btnCancelEditBottom">Cancel (إلغاء)</button>
+                <button type="submit" class="btn btn-primary" id="btnSaveProduct">Save Hoodie (حفظ الهودي)</button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
@@ -512,85 +635,7 @@
     </main>
   </div>
 
-  <!-- MODAL: ADD / EDIT HOODIE -->
-  <div class="modal-backdrop" id="modalProduct">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h3 class="modal-title" id="modalProductTitle">Add New Hoodie</h3>
-        <button class="modal-close" onclick="closeModal('modalProduct')">&times;</button>
-      </div>
-      <form id="formProduct" onsubmit="saveProduct(event)">
-        <div class="modal-body">
-          <input type="hidden" id="prodEditId" />
-          <div class="form-group">
-            <label class="form-label">Hoodie Name</label>
-            <input type="text" class="form-input" id="prodName" required placeholder="e.g. Cairo Midnight Heavyweight" />
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Price (EGP)</label>
-              <input type="number" class="form-input" id="prodPrice" required placeholder="1250" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Compare At / Original (EGP)</label>
-              <input type="number" class="form-input" id="prodOriginalPrice" placeholder="1500" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Badge Tag</label>
-              <select class="form-select" id="prodBadge">
-                <option value="">None</option>
-                <option value="New Drop">New Drop</option>
-                <option value="Bestseller">Bestseller</option>
-                <option value="Limited">Limited Edition</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Collection / Fit</label>
-              <input type="text" class="form-input" id="prodFit" placeholder="Oversized 450 GSM" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Stock by Sizes (S / M / L / XL / XXL)</label>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
-              <div><span style="font-size: 0.7rem; color:var(--text-muted)">S</span><input type="number" class="form-input" id="sizeS" value="10" min="0" /></div>
-              <div><span style="font-size: 0.7rem; color:var(--text-muted)">M</span><input type="number" class="form-input" id="sizeM" value="15" min="0" /></div>
-              <div><span style="font-size: 0.7rem; color:var(--text-muted)">L</span><input type="number" class="form-input" id="sizeL" value="20" min="0" /></div>
-              <div><span style="font-size: 0.7rem; color:var(--text-muted)">XL</span><input type="number" class="form-input" id="sizeXL" value="15" min="0" /></div>
-              <div><span style="font-size: 0.7rem; color:var(--text-muted)">XXL</span><input type="number" class="form-input" id="sizeXXL" value="8" min="0" /></div>
-            </div>
-          </div>
-          <!-- COLOR VARIANTS & MULTIPLE PHOTOS MANAGER -->
-          <div class="form-group" style="border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: rgba(255,255,255,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-              <div>
-                <label class="form-label" style="margin: 0; font-weight: 600; color: var(--accent); font-size: 0.92rem;" id="lblColorVariants">
-                  🎨 Colors & Photos (ألوان المنتج وصور كل لون)
-                </label>
-                <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 2px;" id="lblColorVariantsHelp">
-                  Add color options (e.g. Midnight Black, Ash Grey) and upload multiple photos for each color.
-                </span>
-              </div>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="addColorVariant()" id="btnAddColorBtn">
-                + Add Color (إضافة لون)
-              </button>
-            </div>
 
-            <div id="variantsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Fabric Details</label>
-            <textarea class="form-textarea" id="prodDesc" rows="2" placeholder="100% Egyptian Cotton, French Terry 450 GSM, Pre-shrunk fit."></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('modalProduct')">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btnSaveProduct">Save Hoodie</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- MODAL: ADD PROMO CODE -->
   <div class="modal-backdrop" id="modalPromo">
@@ -662,9 +707,24 @@
         viewAll: 'View All Orders', storeLive: 'STORE LIVE', orderId: 'Order ID',
         customer: 'Customer', gov: 'Governorate', items: 'Items', total: 'Total',
         status: 'Status', actions: 'Actions', toggleLangBtn: 'العربية',
+        txtProductsTitle: 'Hoodie Collection & Stock',
+        btnOpenAddProduct: '+ Add New Hoodie',
+        btnBackToHoodies: 'Back to Hoodies',
+        productEditorTitle: 'Add New Hoodie',
+        btnCancel: 'Cancel',
+        btnSaveHoodie: 'Save Hoodie',
+        secBasicInfo: '1. Basic Hoodie Information',
+        lblProdName: 'Hoodie Name',
+        lblProdPrice: 'Price (EGP)',
+        lblProdOrigPrice: 'Compare At Price (EGP)',
+        lblProdBadge: 'Badge / Tag',
+        lblProdFit: 'Collection / Fit',
+        secStockInfo: '2. Inventory by Sizes (S / M / L / XL / XXL)',
+        secColorsInfo: '3. Color Variants & Photo Galleries',
         lblColorVariants: '🎨 Colors & Photos',
         lblColorVariantsHelp: 'Add color options (e.g. Midnight Black, Ash Grey) and upload multiple photos for each color.',
-        addColor: '+ Add Color'
+        addColor: '+ Add Color',
+        secFabricInfo: '4. Fabric & Material Details'
       },
       ar: {
         controlPanel: 'لوحة تحكم البراند', overview: 'نظرة عامة', orders: 'الطلبات',
@@ -674,9 +734,24 @@
         recentOrders: 'أحدث الطلبات', viewAll: 'عرض كل الطلبات', storeLive: 'المتجر يعمل 🟢',
         orderId: 'رقم الطلب', customer: 'العميل', gov: 'المحافظة', items: 'القطع',
         total: 'الإجمالي', status: 'الحالة', actions: 'إجراءات', toggleLangBtn: 'English',
+        txtProductsTitle: 'كتالوج الهوديز والمخزون',
+        btnOpenAddProduct: '+ إضافة هودي جديد',
+        btnBackToHoodies: 'العودة لقائمة الهوديز',
+        productEditorTitle: 'إضافة هودي جديد',
+        btnCancel: 'إلغاء',
+        btnSaveHoodie: 'حفظ الهودي',
+        secBasicInfo: '1. معلومات الهودي الأساسية',
+        lblProdName: 'اسم الهودي',
+        lblProdPrice: 'سعر البيع (EGP)',
+        lblProdOrigPrice: 'السعر قبل الخصم (EGP)',
+        lblProdBadge: 'الشارة / العلامة',
+        lblProdFit: 'القصة والوزن',
+        secStockInfo: '2. المخزون حسب المقاسات (S / M / L / XL / XXL)',
+        secColorsInfo: '3. ألوان المنتج وصور كل لون',
         lblColorVariants: '🎨 ألوان المنتج وصور كل لون',
         lblColorVariantsHelp: 'أضف خيارات الألوان (مثل أسود ملكي، رمادي) وارفع عدة صور لكل لون.',
-        addColor: '+ إضافة لون'
+        addColor: '+ إضافة لون',
+        secFabricInfo: '4. تفاصيل الخامة والتصنيع'
       }
     };
 
@@ -709,9 +784,25 @@
       document.getElementById('thStatus').textContent = t.status;
       document.getElementById('thAction').textContent = t.actions;
 
+      if (document.getElementById('txtProductsTitle')) document.getElementById('txtProductsTitle').textContent = t.txtProductsTitle;
+      if (document.getElementById('btnOpenAddProduct')) document.getElementById('btnOpenAddProduct').textContent = t.btnOpenAddProduct;
+      if (document.getElementById('btnBackToHoodies')) document.getElementById('btnBackToHoodies').textContent = t.btnBackToHoodies;
+      if (document.getElementById('btnCancelEdit')) document.getElementById('btnCancelEdit').textContent = t.btnCancel;
+      if (document.getElementById('btnCancelEditBottom')) document.getElementById('btnCancelEditBottom').textContent = t.btnCancel;
+      if (document.getElementById('btnSaveProductTop')) document.getElementById('btnSaveProductTop').textContent = t.btnSaveHoodie;
+      if (document.getElementById('btnSaveProduct')) document.getElementById('btnSaveProduct').textContent = t.btnSaveHoodie;
+      if (document.getElementById('secBasicInfo')) document.getElementById('secBasicInfo').textContent = t.secBasicInfo;
+      if (document.getElementById('lblProdName')) document.getElementById('lblProdName').textContent = t.lblProdName;
+      if (document.getElementById('lblProdPrice')) document.getElementById('lblProdPrice').textContent = t.lblProdPrice;
+      if (document.getElementById('lblProdOrigPrice')) document.getElementById('lblProdOrigPrice').textContent = t.lblProdOrigPrice;
+      if (document.getElementById('lblProdBadge')) document.getElementById('lblProdBadge').textContent = t.lblProdBadge;
+      if (document.getElementById('lblProdFit')) document.getElementById('lblProdFit').textContent = t.lblProdFit;
+      if (document.getElementById('secStockInfo')) document.getElementById('secStockInfo').textContent = t.secStockInfo;
+      if (document.getElementById('secColorsInfo')) document.getElementById('secColorsInfo').textContent = t.secColorsInfo;
       if (document.getElementById('lblColorVariants')) document.getElementById('lblColorVariants').textContent = t.lblColorVariants;
       if (document.getElementById('lblColorVariantsHelp')) document.getElementById('lblColorVariantsHelp').textContent = t.lblColorVariantsHelp;
       if (document.getElementById('btnAddColorBtn')) document.getElementById('btnAddColorBtn').textContent = t.addColor;
+      if (document.getElementById('secFabricInfo')) document.getElementById('secFabricInfo').textContent = t.secFabricInfo;
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
@@ -721,6 +812,9 @@
     });
 
     function switchTab(tabId) {
+      if (typeof hideProductEditor === 'function') {
+        hideProductEditor();
+      }
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.toggle('active', item.dataset.tab === tabId);
       });
@@ -946,6 +1040,7 @@
     function renderProducts() {
       const products = StoreDB.getProducts();
       const tbody = document.getElementById('productsTableBody');
+      if (!tbody) return;
 
       if (!products.length) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:32px;">No hoodies found</td></tr>';
@@ -953,6 +1048,10 @@
       }
 
       tbody.innerHTML = products.map(p => {
+        const variants = p.colorVariants || [];
+        const firstVariantWithImg = variants.find(v => v.images && v.images.length > 0);
+        const thumbImg = (firstVariantWithImg && firstVariantWithImg.images[0]) || p.image || null;
+        const totalPhotos = variants.reduce((acc, v) => acc + ((v.images && v.images.length) || 0), 0) || (p.image ? 1 : 0);
         const sizesSum = p.sizes ? Object.values(p.sizes).reduce((a, b) => a + Number(b), 0) : 0;
         const isLow = sizesSum < 10;
         return `
@@ -1004,7 +1103,7 @@
             </td>
             <td>
               <div style="display:flex; gap:6px;">
-                <button class="btn btn-secondary btn-sm" onclick="editProduct(${p.id})">Edit</button>
+                <button class="btn btn-secondary btn-sm" onclick="showProductEditor(true, ${p.id})">Edit</button>
                 <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">Delete</button>
               </div>
             </td>
@@ -1163,56 +1262,78 @@
       });
     }
 
+    function showProductEditor(isEdit, id) {
+      const listView = document.getElementById('productsListView');
+      const editorView = document.getElementById('productEditorView');
+      const titleElem = document.getElementById('productEditorTitle');
+
+      if (!isEdit) {
+        if (titleElem) titleElem.textContent = currentLang === 'ar' ? 'إضافة هودي جديد' : 'Add New Hoodie';
+        const form = document.getElementById('formProduct');
+        if (form) form.reset();
+        document.getElementById('prodEditId').value = '';
+        currentProductVariants = [
+          { colorName: 'Midnight Black', colorHex: '#0a0a0a', images: [] }
+        ];
+        renderVariantsUI();
+      } else {
+        const products = StoreDB.getProducts();
+        const p = products.find(x => x.id == id);
+        if (!p) return;
+
+        if (titleElem) titleElem.textContent = currentLang === 'ar' ? `تعديل الهودي: ${p.name}` : `Edit: ${p.name}`;
+        document.getElementById('prodEditId').value = p.id;
+        document.getElementById('prodName').value = p.name || '';
+        document.getElementById('prodPrice').value = p.price || '';
+        document.getElementById('prodOriginalPrice').value = p.originalPrice || '';
+        document.getElementById('prodBadge').value = p.badge || '';
+        document.getElementById('prodFit').value = p.fit || '';
+        document.getElementById('prodDesc').value = p.desc || '';
+
+        if (p.colorVariants && p.colorVariants.length > 0) {
+          currentProductVariants = JSON.parse(JSON.stringify(p.colorVariants));
+        } else if (p.image) {
+          currentProductVariants = [{
+            colorName: p.colorTheme || 'Midnight Black',
+            colorHex: (p.colors && p.colors[0]) || '#0a0a0a',
+            images: [p.image]
+          }];
+        } else {
+          currentProductVariants = [{
+            colorName: p.colorTheme || 'Midnight Black',
+            colorHex: (p.colors && p.colors[0]) || '#0a0a0a',
+            images: []
+          }];
+        }
+        renderVariantsUI();
+
+        if (p.sizes) {
+          document.getElementById('sizeS').value = p.sizes.S !== undefined ? p.sizes.S : 10;
+          document.getElementById('sizeM').value = p.sizes.M !== undefined ? p.sizes.M : 15;
+          document.getElementById('sizeL').value = p.sizes.L !== undefined ? p.sizes.L : 20;
+          document.getElementById('sizeXL').value = p.sizes.XL !== undefined ? p.sizes.XL : 15;
+          document.getElementById('sizeXXL').value = p.sizes.XXL !== undefined ? p.sizes.XXL : 8;
+        }
+      }
+
+      if (listView) listView.style.display = 'none';
+      if (editorView) editorView.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideProductEditor() {
+      const listView = document.getElementById('productsListView');
+      const editorView = document.getElementById('productEditorView');
+      if (editorView) editorView.style.display = 'none';
+      if (listView) listView.style.display = 'block';
+    }
+
     function openAddProductModal() {
-      document.getElementById('modalProductTitle').textContent = currentLang === 'ar' ? 'إضافة هودي جديد' : 'Add New Hoodie';
-      document.getElementById('formProduct').reset();
-      document.getElementById('prodEditId').value = '';
-      currentProductVariants = [
-        { colorName: 'Midnight Black', colorHex: '#0a0a0a', images: [] }
-      ];
-      renderVariantsUI();
-      openModal('modalProduct');
+      showProductEditor(false);
     }
 
     function editProduct(id) {
-      const products = StoreDB.getProducts();
-      const p = products.find(x => x.id == id);
-      if (!p) return;
-
-      document.getElementById('modalProductTitle').textContent = currentLang === 'ar' ? 'تعديل الهودي' : 'Edit Hoodie';
-      document.getElementById('prodEditId').value = p.id;
-      document.getElementById('prodName').value = p.name;
-      document.getElementById('prodPrice').value = p.price;
-      document.getElementById('prodOriginalPrice').value = p.originalPrice || '';
-      document.getElementById('prodBadge').value = p.badge || '';
-      document.getElementById('prodFit').value = p.fit || '';
-      document.getElementById('prodDesc').value = p.desc || '';
-
-      if (p.colorVariants && p.colorVariants.length > 0) {
-        currentProductVariants = JSON.parse(JSON.stringify(p.colorVariants));
-      } else if (p.image) {
-        currentProductVariants = [{
-          colorName: p.colorTheme || 'Midnight Black',
-          colorHex: (p.colors && p.colors[0]) || '#0a0a0a',
-          images: [p.image]
-        }];
-      } else {
-        currentProductVariants = [{
-          colorName: p.colorTheme || 'Midnight Black',
-          colorHex: (p.colors && p.colors[0]) || '#0a0a0a',
-          images: []
-        }];
-      }
-      renderVariantsUI();
-
-      if (p.sizes) {
-        document.getElementById('sizeS').value = p.sizes.S || 0;
-        document.getElementById('sizeM').value = p.sizes.M || 0;
-        document.getElementById('sizeL').value = p.sizes.L || 0;
-        document.getElementById('sizeXL').value = p.sizes.XL || 0;
-        document.getElementById('sizeXXL').value = p.sizes.XXL || 0;
-      }
-      openModal('modalProduct');
+      showProductEditor(true, id);
     }
 
     async function saveProduct(e) {
@@ -1244,7 +1365,7 @@
       };
 
       await StoreDB.saveProduct(pData, editId);
-      closeModal('modalProduct');
+      hideProductEditor();
       showToast(editId ? (currentLang === 'ar' ? 'تم تحديث الهودي بنجاح' : 'Hoodie updated successfully') : (currentLang === 'ar' ? 'تمت إضافة الهودي للمتجر' : 'New hoodie added to collection'));
       renderAll();
     }
