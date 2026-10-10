@@ -22,7 +22,8 @@
       "XXL": 5
     },
     "desc": "100% Egyptian Cotton, ultra-dense 450 GSM French Terry, double-layered hood with brushed 21 insignia.",
-    "active": true
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80"
   },
   {
     "id": 2,
@@ -47,7 +48,8 @@
       "XXL": 4
     },
     "desc": "Custom washed ash fleece with dropped shoulders, kangaroo pocket, and hidden cuff embroidery.",
-    "active": true
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80"
   },
   {
     "id": 3,
@@ -72,7 +74,8 @@
       "XXL": 2
     },
     "desc": "Earthy Egyptian desert hue, tailored boxy cut, ribbed hems with heavy raw cotton weight.",
-    "active": true
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80"
   },
   {
     "id": 4,
@@ -97,7 +100,8 @@
       "XXL": 4
     },
     "desc": "Clean off-white minimalism. Subtle tonal 21 screen-print, buttery soft brushed inner lining.",
-    "active": true
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=800&q=80"
   },
   {
     "id": 5,
@@ -122,7 +126,8 @@
       "XXL": 3
     },
     "desc": "Double-way matte silver metal zipper, premium heavyweight Egyptian yarn, engineered box hood.",
-    "active": true
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80"
   },
   {
     "id": 6,
@@ -147,7 +152,8 @@
       "XXL": 3
     },
     "desc": "Subtle muted fog tone, seamless shoulder drop, vintage garment dyed finish.",
-    "active": true
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
   },
   {
     "id": 7,
@@ -169,6 +175,7 @@
       "#2d2d2d"
     ],
     "colorTheme": "black",
-    "active": true
+    "active": true,
+    "image": "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80"
   }
 ]

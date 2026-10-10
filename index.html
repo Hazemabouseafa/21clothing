@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -63,6 +63,9 @@
     .product-card { position: relative; background: var(--gray-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; cursor: none; transition: transform 0.4s var(--ease), border-color 0.4s; display: flex; flex-direction: column; }
     .product-card:hover { transform: translateY(-6px); border-color: var(--border-hover); }
     .product-visual-wrap { position: relative; aspect-ratio: 4/5; background: radial-gradient(circle at 50% 60%, #1c1c20 0%, #0d0d0f 75%); display: flex; align-items: center; justify-content: center; padding: 30px; overflow: hidden; }
+    .product-visual-wrap.has-real-image { padding: 0; background: #0c0c0e; }
+    .product-real-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.65s var(--ease); display: block; }
+    .product-card:hover .product-real-img { transform: scale(1.07); }
     .product-badge-tag { position: absolute; top: 16px; left: 16px; font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase; padding: 5px 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); z-index: 5; }
     .hoodie-artwork { width: 80%; height: 80%; transition: transform 0.6s var(--ease); }
     .product-card:hover .hoodie-artwork { transform: scale(1.06); }
@@ -96,7 +99,8 @@
     .cart-drawer-items { flex: 1; overflow-y: auto; padding: 24px 28px; }
     .cart-empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 12px; text-align: center; }
     .cart-item-row { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--border); }
-    .cart-item-preview { width: 70px; height: 85px; background: #080808; border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .cart-item-preview { width: 70px; height: 85px; background: #080808; border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+    .cart-item-preview img { width: 100%; height: 100%; object-fit: cover; }
     .cart-item-info { flex: 1; }
     .cart-item-name { font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 4px; }
     .cart-item-variant { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 8px; }
@@ -543,12 +547,15 @@
         const defaultSize = availableSizes.find(sz => p.sizes && p.sizes[sz] > 0) || 'L';
         const color = p.svgFill || '#1c1c1c';
         const accent = p.accent || '#444';
+        const hasRealImg = Boolean(p.image);
 
         return `
           <div class="product-card" data-pid="${p.id}">
-            <div class="product-visual-wrap">
+            <div class="product-visual-wrap ${hasRealImg ? 'has-real-image' : ''}">
               ${p.badge ? `<span class="product-badge-tag">${p.badge}</span>` : ''}
-              ${generateHoodieSvg(color, accent)}
+              ${hasRealImg ? `
+                <img src="${p.image}" class="product-real-img" alt="${escapeHtml(p.name)}" loading="lazy" />
+              ` : generateHoodieSvg(color, accent)}
             </div>
             <div class="product-info-box">
               <div class="product-meta-row">
@@ -610,6 +617,7 @@
           name: p.name,
           price: p.price,
           size: size,
+          image: p.image || null,
           color: p.svgFill || '#1c1c1c',
           qty: 1
         });
@@ -650,7 +658,7 @@
       listEl.innerHTML = cart.map((item, idx) => `
         <div class="cart-item-row">
           <div class="cart-item-preview">
-            <span style="font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--muted)">21</span>
+            ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.name)}" />` : `<span style="font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--muted)">21</span>`}
           </div>
           <div class="cart-item-info">
             <h4 class="cart-item-name">${escapeHtml(item.name)}</h4>

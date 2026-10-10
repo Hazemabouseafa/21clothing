@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
@@ -33,6 +33,7 @@ const DEFAULTS = {
       colors: ["#0a0a0a", "#1a1a2e", "#2d1b1b"],
       svgFill: "#1c1c1c",
       accent: "#3a3a3a",
+      image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80",
       sizes: { S: 8, M: 14, L: 20, XL: 12, XXL: 5 },
       desc: "100% Egyptian Cotton, ultra-dense 450 GSM French Terry, double-layered hood with brushed 21 insignia.",
       active: true
@@ -48,6 +49,7 @@ const DEFAULTS = {
       colors: ["#666666", "#888888", "#444444"],
       svgFill: "#4a4a4a",
       accent: "#888888",
+      image: "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80",
       sizes: { S: 12, M: 18, L: 15, XL: 10, XXL: 4 },
       desc: "Custom washed ash fleece with dropped shoulders, kangaroo pocket, and hidden cuff embroidery.",
       active: true
@@ -63,6 +65,7 @@ const DEFAULTS = {
       colors: ["#c8b89a", "#d4c5ae", "#e0d5c0"],
       svgFill: "#3d3530",
       accent: "#5a4f46",
+      image: "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80",
       sizes: { S: 5, M: 9, L: 11, XL: 6, XXL: 2 },
       desc: "Earthy Egyptian desert hue, tailored boxy cut, ribbed hems with heavy raw cotton weight.",
       active: true
@@ -78,6 +81,7 @@ const DEFAULTS = {
       colors: ["#e8e3d8", "#f0ece2", "#d4cfc4"],
       svgFill: "#6a6a6a",
       accent: "#999999",
+      image: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=800&q=80",
       sizes: { S: 10, M: 15, L: 12, XL: 8, XXL: 4 },
       desc: "Clean off-white minimalism. Subtle tonal 21 screen-print, buttery soft brushed inner lining.",
       active: true
@@ -93,6 +97,7 @@ const DEFAULTS = {
       colors: ["#111111", "#1a1a1a", "#000000"],
       svgFill: "#2a2a2a",
       accent: "#555555",
+      image: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80",
       sizes: { S: 6, M: 12, L: 16, XL: 10, XXL: 3 },
       desc: "Double-way matte silver metal zipper, premium heavyweight Egyptian yarn, engineered box hood.",
       active: true
@@ -108,6 +113,7 @@ const DEFAULTS = {
       colors: ["#b0aaa0", "#c0bab0", "#a0a09a"],
       svgFill: "#3d3d3d",
       accent: "#666666",
+      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
       sizes: { S: 9, M: 14, L: 17, XL: 7, XXL: 3 },
       desc: "Subtle muted fog tone, seamless shoulder drop, vintage garment dyed finish.",
       active: true
@@ -242,7 +248,7 @@ function parseBody(req) {
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();
-      if (body.length > 5 * 1024 * 1024) reject(new Error('Payload too large'));
+      if (body.length > 15 * 1024 * 1024) reject(new Error('Payload too large'));
     });
     req.on('end', () => {
       if (!body) return resolve({});

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
@@ -101,6 +101,7 @@
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
     .product-thumb { width: 50px; height: 60px; background: #0d0d0d; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .product-thumb svg { width: 32px; height: 40px; }
+    .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .admin-toast { position: fixed; bottom: 28px; right: 28px; background: var(--accent); color: #000; padding: 12px 24px; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 0; transform: translateY(15px); transition: var(--transition); z-index: 2000; pointer-events: none; }
     [dir="rtl"] .admin-toast { right: auto; left: 28px; }
     .admin-toast.show { opacity: 1; transform: translateY(0); }
@@ -561,6 +562,30 @@
             </div>
           </div>
           <div class="form-group">
+            <label class="form-label" id="lblProductImage">Hoodie Picture (صورة المنتج)</label>
+            <div style="display: flex; gap: 14px; align-items: flex-start;">
+              <div id="imagePreviewContainer" style="width: 86px; height: 104px; background: var(--surface-light); border: 1px dashed var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; flex-shrink: 0;">
+                <span id="previewPlaceholder" style="font-size: 0.7rem; color: var(--text-dim); text-align: center; padding: 6px; line-height: 1.3;">No Image<br/>(بدون صورة)</span>
+                <img id="imagePreview" src="" alt="Preview" style="display: none; width: 100%; height: 100%; object-fit: cover;" />
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <label class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0;">
+                    <span>📁</span> <span id="btnUploadFileText">Upload from Device</span>
+                    <input type="file" id="prodImageFile" accept="image/*" style="display: none;" onchange="handleImageFileSelect(event)" />
+                  </label>
+                  <button type="button" class="btn btn-danger btn-sm" id="btnRemoveImage" style="display: none;" onclick="clearProductImage()">✕ Remove</button>
+                  <span id="imageCompressNotice" style="font-size: 0.72rem; color: var(--success); display: none;">✓ Ready</span>
+                </div>
+                <div>
+                  <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 3px;" id="lblImageUrl">Or paste image URL (أو رابط الصورة مباشرة):</span>
+                  <input type="url" class="form-input" id="prodImageUrl" placeholder="https://example.com/hoodie.jpg" style="padding: 6px 10px; font-size: 0.8rem;" oninput="handleImageUrlInput(this.value)" />
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="prodImageVal" />
+          </div>
+          <div class="form-group">
             <label class="form-label">Color Theme</label>
             <select class="form-select" id="prodColorTheme">
               <option value="black">Midnight Black (#0a0a0a)</option>
@@ -652,7 +677,8 @@
         inventory: 'Hoodie Inventory', aov: 'Avg Order Value', recentOrders: 'Recent Orders',
         viewAll: 'View All Orders', storeLive: 'STORE LIVE', orderId: 'Order ID',
         customer: 'Customer', gov: 'Governorate', items: 'Items', total: 'Total',
-        status: 'Status', actions: 'Actions', toggleLangBtn: 'العربية'
+        status: 'Status', actions: 'Actions', toggleLangBtn: 'العربية',
+        prodImage: 'Hoodie Picture', uploadBtn: 'Upload from Device', orUrl: 'Or paste image URL:'
       },
       ar: {
         controlPanel: 'لوحة تحكم البراند', overview: 'نظرة عامة', orders: 'الطلبات',
@@ -661,7 +687,8 @@
         totalOrders: 'عدد الطلبات', inventory: 'المخزون الكلي', aov: 'متوسط قيمة الطلب',
         recentOrders: 'أحدث الطلبات', viewAll: 'عرض كل الطلبات', storeLive: 'المتجر يعمل 🟢',
         orderId: 'رقم الطلب', customer: 'العميل', gov: 'المحافظة', items: 'القطع',
-        total: 'الإجمالي', status: 'الحالة', actions: 'إجراءات', toggleLangBtn: 'English'
+        total: 'الإجمالي', status: 'الحالة', actions: 'إجراءات', toggleLangBtn: 'English',
+        prodImage: 'صورة الهودي', uploadBtn: 'رفع صورة من الجهاز', orUrl: 'أو أدخل رابط الصورة مباشرة:'
       }
     };
 
@@ -693,6 +720,10 @@
       document.getElementById('thTotal').textContent = t.total;
       document.getElementById('thStatus').textContent = t.status;
       document.getElementById('thAction').textContent = t.actions;
+
+      if (document.getElementById('lblProductImage')) document.getElementById('lblProductImage').textContent = t.prodImage;
+      if (document.getElementById('btnUploadFileText')) document.getElementById('btnUploadFileText').textContent = t.uploadBtn;
+      if (document.getElementById('lblImageUrl')) document.getElementById('lblImageUrl').textContent = t.orUrl;
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
@@ -940,11 +971,12 @@
           <tr>
             <td>
               <div class="product-thumb">
+                ${p.image ? `<img src="${p.image}" alt="${escapeHtml(p.name)}" />` : `
                 <svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
                   <path d="M40 105 L18 244 L182 244 L160 105" fill="#222" stroke="#444" stroke-width="2"/>
                   <path d="M58 105 Q68 36 100 26 Q132 36 142 105" fill="#222" stroke="#444" stroke-width="2"/>
                   <text x="100" y="152" text-anchor="middle" font-family="serif" font-size="28" fill="#666">21</text>
-                </svg>
+                </svg>`}
               </div>
             </td>
             <td>
@@ -987,10 +1019,106 @@
       }).join('');
     }
 
+    /* ── Product Image Handlers ── */
+    function handleImageFileSelect(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const notice = document.getElementById('imageCompressNotice');
+      if (notice) {
+        notice.style.display = 'inline-block';
+        notice.textContent = '⏳ Processing...';
+        notice.style.color = 'var(--text-muted)';
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const rawDataUrl = evt.target.result;
+        const img = new Image();
+        img.onload = function() {
+          const maxDim = 1000;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+          setProductImagePreview(compressedDataUrl);
+          document.getElementById('prodImageUrl').value = '';
+          if (notice) {
+            notice.textContent = '✓ Ready';
+            notice.style.color = 'var(--success)';
+          }
+        };
+        img.onerror = function() {
+          setProductImagePreview(rawDataUrl);
+          if (notice) notice.style.display = 'none';
+        };
+        img.src = rawDataUrl;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleImageUrlInput(val) {
+      const trimmed = val ? val.trim() : '';
+      if (trimmed.length > 5) {
+        setProductImagePreview(trimmed);
+      } else {
+        clearProductImage();
+      }
+    }
+
+    function setProductImagePreview(src) {
+      document.getElementById('prodImageVal').value = src;
+      const previewImg = document.getElementById('imagePreview');
+      const placeholder = document.getElementById('previewPlaceholder');
+      const removeBtn = document.getElementById('btnRemoveImage');
+
+      if (previewImg) {
+        previewImg.src = src;
+        previewImg.style.display = 'block';
+      }
+      if (placeholder) placeholder.style.display = 'none';
+      if (removeBtn) removeBtn.style.display = 'inline-block';
+    }
+
+    function clearProductImage() {
+      document.getElementById('prodImageVal').value = '';
+      document.getElementById('prodImageUrl').value = '';
+      const fileInput = document.getElementById('prodImageFile');
+      if (fileInput) fileInput.value = '';
+
+      const previewImg = document.getElementById('imagePreview');
+      const placeholder = document.getElementById('previewPlaceholder');
+      const removeBtn = document.getElementById('btnRemoveImage');
+      const notice = document.getElementById('imageCompressNotice');
+
+      if (previewImg) {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+      }
+      if (placeholder) placeholder.style.display = 'block';
+      if (removeBtn) removeBtn.style.display = 'none';
+      if (notice) notice.style.display = 'none';
+    }
+
     function openAddProductModal() {
-      document.getElementById('modalProductTitle').textContent = 'Add New Hoodie';
+      document.getElementById('modalProductTitle').textContent = currentLang === 'ar' ? 'إضافة هودي جديد' : 'Add New Hoodie';
       document.getElementById('formProduct').reset();
       document.getElementById('prodEditId').value = '';
+      clearProductImage();
       openModal('modalProduct');
     }
 
@@ -999,7 +1127,7 @@
       const p = products.find(x => x.id == id);
       if (!p) return;
 
-      document.getElementById('modalProductTitle').textContent = 'Edit Hoodie';
+      document.getElementById('modalProductTitle').textContent = currentLang === 'ar' ? 'تعديل الهودي' : 'Edit Hoodie';
       document.getElementById('prodEditId').value = p.id;
       document.getElementById('prodName').value = p.name;
       document.getElementById('prodPrice').value = p.price;
@@ -1008,6 +1136,15 @@
       document.getElementById('prodFit').value = p.fit || '';
       document.getElementById('prodColorTheme').value = p.colorTheme || 'black';
       document.getElementById('prodDesc').value = p.desc || '';
+
+      if (p.image) {
+        setProductImagePreview(p.image);
+        if (p.image.startsWith('http')) {
+          document.getElementById('prodImageUrl').value = p.image;
+        }
+      } else {
+        clearProductImage();
+      }
 
       if (p.sizes) {
         document.getElementById('sizeS').value = p.sizes.S || 0;
@@ -1030,6 +1167,7 @@
         badge: document.getElementById('prodBadge').value,
         fit: document.getElementById('prodFit').value.trim() || 'Oversized Fit',
         colorTheme: document.getElementById('prodColorTheme').value,
+        image: document.getElementById('prodImageVal').value || null,
         desc: document.getElementById('prodDesc').value.trim(),
         sizes: {
           S: Number(document.getElementById('sizeS').value) || 0,
@@ -1044,7 +1182,7 @@
 
       await StoreDB.saveProduct(pData, editId);
       closeModal('modalProduct');
-      showToast(editId ? 'Hoodie updated successfully' : 'New hoodie added to collection');
+      showToast(editId ? (currentLang === 'ar' ? 'تم تحديث الهودي بنجاح' : 'Hoodie updated successfully') : (currentLang === 'ar' ? 'تمت إضافة الهودي للمتجر' : 'New hoodie added to collection'));
       renderAll();
     }
 
