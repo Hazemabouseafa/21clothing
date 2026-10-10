@@ -23,7 +23,14 @@
     },
     "desc": "100% Egyptian Cotton, ultra-dense 450 GSM French Terry, double-layered hood with brushed 21 insignia.",
     "active": true,
-    "image": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80"
+    "image": null,
+    "colorVariants": [
+      {
+        "colorName": "Midnight Black",
+        "colorHex": "#0a0a0a",
+        "images": []
+      }
+    ]
   },
   {
     "id": 2,
@@ -49,7 +56,14 @@
     },
     "desc": "Custom washed ash fleece with dropped shoulders, kangaroo pocket, and hidden cuff embroidery.",
     "active": true,
-    "image": "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=80"
+    "image": null,
+    "colorVariants": [
+      {
+        "colorName": "Ash Heather",
+        "colorHex": "#666666",
+        "images": []
+      }
+    ]
   },
   {
     "id": 3,
@@ -75,7 +89,14 @@
     },
     "desc": "Earthy Egyptian desert hue, tailored boxy cut, ribbed hems with heavy raw cotton weight.",
     "active": true,
-    "image": "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80"
+    "image": null,
+    "colorVariants": [
+      {
+        "colorName": "Stone Desert",
+        "colorHex": "#c8b89a",
+        "images": []
+      }
+    ]
   },
   {
     "id": 4,
@@ -101,7 +122,14 @@
     },
     "desc": "Clean off-white minimalism. Subtle tonal 21 screen-print, buttery soft brushed inner lining.",
     "active": true,
-    "image": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=800&q=80"
+    "image": null,
+    "colorVariants": [
+      {
+        "colorName": "Chalk Bone",
+        "colorHex": "#e8e3d8",
+        "images": []
+      }
+    ]
   },
   {
     "id": 5,
@@ -127,7 +155,14 @@
     },
     "desc": "Double-way matte silver metal zipper, premium heavyweight Egyptian yarn, engineered box hood.",
     "active": true,
-    "image": "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=800&q=80"
+    "image": null,
+    "colorVariants": [
+      {
+        "colorName": "Midnight Black",
+        "colorHex": "#111111",
+        "images": []
+      }
+    ]
   },
   {
     "id": 6,
@@ -153,7 +188,14 @@
     },
     "desc": "Subtle muted fog tone, seamless shoulder drop, vintage garment dyed finish.",
     "active": true,
-    "image": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80"
+    "image": null,
+    "colorVariants": [
+      {
+        "colorName": "Ash Heather",
+        "colorHex": "#b0aaa0",
+        "images": []
+      }
+    ]
   },
   {
     "id": 7,
@@ -176,6 +218,13 @@
     ],
     "colorTheme": "black",
     "active": true,
-    "image": "https://images.unsplash.com/photo-1578587018452-892bacefd3f2?auto=format&fit=crop&w=800&q=80"
+    "image": null,
+    "colorVariants": [
+      {
+        "colorName": "Midnight Black",
+        "colorHex": "#1c1c1c",
+        "images": []
+      }
+    ]
   }
 ]

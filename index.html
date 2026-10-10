@@ -64,8 +64,14 @@
     .product-card:hover { transform: translateY(-6px); border-color: var(--border-hover); }
     .product-visual-wrap { position: relative; aspect-ratio: 4/5; background: radial-gradient(circle at 50% 60%, #1c1c20 0%, #0d0d0f 75%); display: flex; align-items: center; justify-content: center; padding: 30px; overflow: hidden; }
     .product-visual-wrap.has-real-image { padding: 0; background: #0c0c0e; }
-    .product-real-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.65s var(--ease); display: block; }
+    .product-real-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.65s var(--ease), opacity 0.4s ease; display: block; }
     .product-card:hover .product-real-img { transform: scale(1.07); }
+    .product-real-img-secondary { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity 0.45s var(--ease), transform 0.65s var(--ease); z-index: 2; }
+    .product-card:hover .product-real-img-secondary { opacity: 1; transform: scale(1.07); }
+    .image-count-tag { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); color: var(--muted); font-size: 0.62rem; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); z-index: 4; }
+    .color-swatch-dot { transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; }
+    .color-swatch-dot:hover { transform: scale(1.25); }
+    .color-swatch-dot.active { border-color: #ffffff !important; box-shadow: 0 0 8px rgba(255,255,255,0.45); }
     .product-badge-tag { position: absolute; top: 16px; left: 16px; font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase; padding: 5px 12px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); z-index: 5; }
     .hoodie-artwork { width: 80%; height: 80%; transition: transform 0.6s var(--ease); }
     .product-card:hover .hoodie-artwork { transform: scale(1.06); }
@@ -545,17 +551,27 @@
       grid.innerHTML = filtered.map(p => {
         const availableSizes = p.sizes ? Object.keys(p.sizes) : ['S', 'M', 'L', 'XL', 'XXL'];
         const defaultSize = availableSizes.find(sz => p.sizes && p.sizes[sz] > 0) || 'L';
-        const color = p.svgFill || '#1c1c1c';
+        const variants = (p.colorVariants && p.colorVariants.length) ? p.colorVariants : [
+          { colorName: p.colorTheme || 'Midnight Black', colorHex: (p.colors && p.colors[0]) || p.svgFill || '#1c1c1c', images: p.image ? [p.image] : [] }
+        ];
+        const activeVariant = variants[0];
+        const hasImages = activeVariant.images && activeVariant.images.length > 0;
+        const color = activeVariant.colorHex || p.svgFill || '#1c1c1c';
         const accent = p.accent || '#444';
-        const hasRealImg = Boolean(p.image);
 
         return `
-          <div class="product-card" data-pid="${p.id}">
-            <div class="product-visual-wrap ${hasRealImg ? 'has-real-image' : ''}">
+          <div class="product-card" data-pid="${p.id}" data-active-variant="0">
+            <div class="product-visual-wrap ${hasImages ? 'has-real-image' : ''}" id="cardVisual_${p.id}">
               ${p.badge ? `<span class="product-badge-tag">${p.badge}</span>` : ''}
-              ${hasRealImg ? `
-                <img src="${p.image}" class="product-real-img" alt="${escapeHtml(p.name)}" loading="lazy" />
-              ` : generateHoodieSvg(color, accent)}
+              <div id="cardMediaBox_${p.id}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative;">
+                ${hasImages ? `
+                  <img src="${activeVariant.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" loading="lazy" />
+                  ${activeVariant.images.length > 1 ? `
+                    <img src="${activeVariant.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" loading="lazy" />
+                    <span class="image-count-tag" id="cardImgCount_${p.id}">✦ ${activeVariant.images.length} Photos</span>
+                  ` : ''}
+                ` : generateHoodieSvg(color, accent)}
+              </div>
             </div>
             <div class="product-info-box">
               <div class="product-meta-row">
@@ -567,6 +583,27 @@
               </div>
               <p class="product-fit-label">${escapeHtml(p.fit || '450 GSM French Terry')}</p>
               
+              <!-- Color Selector -->
+              <div class="color-selector-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase;">Color:</span>
+                  <span class="active-color-title" id="cardColorTitle_${p.id}" style="font-size:0.75rem; color:var(--white); font-weight:500;">
+                    ${escapeHtml(activeVariant.colorName)}
+                  </span>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  ${variants.map((v, vIdx) => `
+                    <button type="button" class="color-swatch-dot ${vIdx === 0 ? 'active' : ''}" 
+                            data-vidx="${vIdx}"
+                            style="background:${v.colorHex}; width:16px; height:16px; border-radius:50%; border:2px solid ${vIdx === 0 ? '#fff' : 'transparent'}; cursor:pointer; outline:1px solid rgba(255,255,255,0.25);" 
+                            title="${escapeHtml(v.colorName)}" 
+                            onclick="selectProductColor(${p.id}, ${vIdx})">
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Size Selector -->
               <div class="size-selector-row">
                 <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase; margin-right:4px;">Size:</span>
                 ${['S', 'M', 'L', 'XL', 'XXL'].map(sz => {
@@ -599,6 +636,53 @@
       });
     }
 
+    function selectProductColor(pid, vIdx) {
+      const products = StoreDB.getProducts();
+      const p = products.find(x => x.id == pid);
+      if (!p) return;
+
+      const card = document.querySelector(`.product-card[data-pid="${pid}"]`);
+      if (!card) return;
+
+      card.dataset.activeVariant = vIdx;
+
+      const variants = (p.colorVariants && p.colorVariants.length) ? p.colorVariants : [
+        { colorName: p.colorTheme || 'Midnight Black', colorHex: (p.colors && p.colors[0]) || p.svgFill || '#1c1c1c', images: p.image ? [p.image] : [] }
+      ];
+      const v = variants[vIdx] || variants[0];
+
+      // Update color title
+      const titleEl = document.getElementById(`cardColorTitle_${pid}`);
+      if (titleEl) titleEl.textContent = v.colorName;
+
+      // Update swatches active state
+      card.querySelectorAll('.color-swatch-dot').forEach(btn => {
+        const isThis = Number(btn.dataset.vidx) === vIdx;
+        btn.classList.toggle('active', isThis);
+        btn.style.borderColor = isThis ? '#fff' : 'transparent';
+      });
+
+      // Update media
+      const visualWrap = document.getElementById(`cardVisual_${pid}`);
+      const mediaBox = document.getElementById(`cardMediaBox_${pid}`);
+      if (!mediaBox || !visualWrap) return;
+
+      const hasImages = v.images && v.images.length > 0;
+      visualWrap.classList.toggle('has-real-image', hasImages);
+
+      if (hasImages) {
+        mediaBox.innerHTML = `
+          <img src="${v.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" loading="lazy" />
+          ${v.images.length > 1 ? `
+            <img src="${v.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" loading="lazy" />
+            <span class="image-count-tag" id="cardImgCount_${p.id}">✦ ${v.images.length} Photos</span>
+          ` : ''}
+        `;
+      } else {
+        mediaBox.innerHTML = generateHoodieSvg(v.colorHex || p.svgFill || '#1c1c1c', p.accent || '#444');
+      }
+    }
+
     function addToBagFromCard(pid) {
       const products = StoreDB.getProducts();
       const p = products.find(x => x.id == pid);
@@ -608,7 +692,13 @@
       const selectedPill = card.querySelector('.size-pill.selected');
       const size = selectedPill ? selectedPill.dataset.size : 'L';
 
-      const existing = cart.find(item => item.id === p.id && item.size === size);
+      const vIdx = Number(card.dataset.activeVariant || 0);
+      const variants = (p.colorVariants && p.colorVariants.length) ? p.colorVariants : [
+        { colorName: p.colorTheme || 'Midnight Black', colorHex: (p.colors && p.colors[0]) || p.svgFill || '#1c1c1c', images: p.image ? [p.image] : [] }
+      ];
+      const selectedVariant = variants[vIdx] || variants[0];
+
+      const existing = cart.find(item => item.id === p.id && item.size === size && item.color === selectedVariant.colorName);
       if (existing) {
         existing.qty++;
       } else {
@@ -617,15 +707,16 @@
           name: p.name,
           price: p.price,
           size: size,
-          image: p.image || null,
-          color: p.svgFill || '#1c1c1c',
+          color: selectedVariant.colorName,
+          colorHex: selectedVariant.colorHex,
+          image: (selectedVariant.images && selectedVariant.images[0]) || p.image || null,
           qty: 1
         });
       }
 
       // Meta Pixel AddToCart event
       trackMetaEvent('AddToCart', {
-        content_name: p.name,
+        content_name: `${p.name} - ${selectedVariant.colorName}`,
         content_ids: [String(p.id)],
         content_type: 'product',
         value: p.price,
@@ -633,7 +724,7 @@
       });
 
       persistCart();
-      showToast('Added to Bag');
+      showToast(`Added to Bag (${selectedVariant.colorName} / ${size})`);
     }
 
     function updateCartDrawer() {
@@ -662,7 +753,7 @@
           </div>
           <div class="cart-item-info">
             <h4 class="cart-item-name">${escapeHtml(item.name)}</h4>
-            <p class="cart-item-variant">Size: ${item.size} &middot; Qty: ${item.qty}</p>
+            <p class="cart-item-variant">Size: ${item.size} &middot; Color: ${escapeHtml(item.color || 'Standard')} &middot; Qty: ${item.qty}</p>
             <div class="cart-item-bottom">
               <span style="font-size:0.85rem; font-weight:500;">${(item.price * item.qty).toLocaleString()} EGP</span>
               <button class="cart-item-remove" onclick="removeCartItem(${idx})">Remove</button>
@@ -828,7 +919,7 @@
 
       const settings = StoreDB.getSettings();
       const brandWa = settings.waNumber || '201012345678';
-      const itemsListText = cart.map(i => `- ${i.qty}x ${i.name} (Size: ${i.size})`).join('\n');
+      const itemsListText = cart.map(i => `- ${i.qty}x ${i.name} (Size: ${i.size}${i.color ? ', Color: ' + i.color : ''})`).join('\n');
       const waMsg = `أهلاً 21 Twenty One،\nأنا عملت أوردر رقم #${orderId}:\n${itemsListText}\nالإجمالي: ${total} جنيه\nطريقة الدفع: ${custPayment}\nالاسم: ${custName}\nالموبايل: ${custPhone}\nالعنوان: ${custAddress} - ${custGov}`;
 
       const waUrl = `https://wa.me/${brandWa}?text=${encodeURIComponent(waMsg)}`;
