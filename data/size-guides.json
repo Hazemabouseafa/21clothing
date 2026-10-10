@@ -1,0 +1,106 @@
+{
+  "top": {
+    "id": "top",
+    "name": "Hoodies & Shirts Size Guide (دليل مقاسات الهوديز والتيشرتات)",
+    "type": "shirt",
+    "description": "Relaxed streetwear oversized fit. Measurements in Centimeters (cm).",
+    "unit": "cm",
+    "columns": [
+      "Size",
+      "Chest (العرض)",
+      "Length (الطول)",
+      "Shoulders (الأكتاف)",
+      "Sleeve (الكم)"
+    ],
+    "rows": [
+      {
+        "size": "S",
+        "chest": "58",
+        "length": "68",
+        "shoulders": "54",
+        "sleeve": "60"
+      },
+      {
+        "size": "M",
+        "chest": "61",
+        "length": "71",
+        "shoulders": "56",
+        "sleeve": "62"
+      },
+      {
+        "size": "L",
+        "chest": "64",
+        "length": "74",
+        "shoulders": "58",
+        "sleeve": "64"
+      },
+      {
+        "size": "XL",
+        "chest": "67",
+        "length": "76",
+        "shoulders": "60",
+        "sleeve": "65"
+      },
+      {
+        "size": "XXL",
+        "chest": "70",
+        "length": "78",
+        "shoulders": "62",
+        "sleeve": "66"
+      }
+    ],
+    "fitNotes": "Model is 182 cm (78 kg) wearing Large for an oversized streetwear look. Choose normal size for oversize, or size down for standard fit."
+  },
+  "bottom": {
+    "id": "bottom",
+    "name": "Pantalon & Sweatpants Size Guide (دليل مقاسات البنطلون)",
+    "type": "pantalon",
+    "description": "Straight leg relaxed cut with elastic waist drawstring. Measurements in Centimeters (cm).",
+    "unit": "cm",
+    "columns": [
+      "Size",
+      "Waist (الوسط)",
+      "Length (الطول)",
+      "Thigh (الفخذ)",
+      "Leg Opening (فتحة الرجل)"
+    ],
+    "rows": [
+      {
+        "size": "S",
+        "waist": "72 - 78",
+        "length": "100",
+        "thigh": "62",
+        "legOpening": "22"
+      },
+      {
+        "size": "M",
+        "waist": "78 - 84",
+        "length": "103",
+        "thigh": "65",
+        "legOpening": "23"
+      },
+      {
+        "size": "L",
+        "waist": "84 - 90",
+        "length": "105",
+        "thigh": "68",
+        "legOpening": "24"
+      },
+      {
+        "size": "XL",
+        "waist": "90 - 96",
+        "length": "107",
+        "thigh": "71",
+        "legOpening": "25"
+      },
+      {
+        "size": "XXL",
+        "waist": "96 - 104",
+        "length": "109",
+        "thigh": "74",
+        "legOpening": "26"
+      }
+    ],
+    "fitNotes": "Elastic waist band provides generous flex. Order based on your usual waist sizing."
+  }
+}

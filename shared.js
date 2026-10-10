@@ -264,7 +264,9 @@ const StoreDB = {
   set(key, val) {
     try {
       localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(val));
-      window.dispatchEvent(new CustomEvent('storedb_change', { detail: { key, val } }));
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('storedb_change', { detail: { key, val } }));
+      }
     } catch(e) {
       console.error(e);
     }
@@ -557,4 +559,9 @@ const StoreDB = {
 };
 
 StoreDB.init();
-window.StoreDB = StoreDB;
+if (typeof window !== 'undefined') {
+  window.StoreDB = StoreDB;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = StoreDB;
+}

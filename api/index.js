@@ -65,6 +65,28 @@ module.exports = async (req, res) => {
         if (Array.isArray(body)) {
           await setStoreData('products', body);
           return sendJson(res, 200, body);
+        } else if (body && body.id) {
+          const idx = products.findIndex(p => Number(p.id) === Number(body.id));
+          if (idx !== -1) {
+            products[idx] = { ...products[idx], ...body, id: Number(body.id) };
+            await setStoreData('products', products);
+            return sendJson(res, 200, products[idx]);
+          } else {
+            return sendJson(res, 404, { error: 'Product not found' });
+          }
+        }
+      }
+
+      if (method === 'DELETE') {
+        const idToDelete = parsedUrl.query && parsedUrl.query.id;
+        if (idToDelete) {
+          const idx = products.findIndex(p => Number(p.id) === Number(idToDelete));
+          if (idx !== -1) {
+            products.splice(idx, 1);
+            await setStoreData('products', products);
+            return sendJson(res, 200, { success: true });
+          }
+          return sendJson(res, 404, { error: 'Product not found' });
         }
       }
     }
@@ -131,6 +153,28 @@ module.exports = async (req, res) => {
         if (Array.isArray(body)) {
           await setStoreData('orders', body);
           return sendJson(res, 200, body);
+        } else if (body && body.id) {
+          const idx = orders.findIndex(o => String(o.id) === String(body.id));
+          if (idx !== -1) {
+            orders[idx] = { ...orders[idx], ...body, id: body.id };
+            await setStoreData('orders', orders);
+            return sendJson(res, 200, { success: true, order: orders[idx] });
+          } else {
+            return sendJson(res, 404, { error: 'Order not found' });
+          }
+        }
+      }
+
+      if (method === 'DELETE') {
+        const idToDelete = parsedUrl.query && parsedUrl.query.id;
+        if (idToDelete) {
+          const idx = orders.findIndex(o => String(o.id) === String(idToDelete));
+          if (idx !== -1) {
+            orders.splice(idx, 1);
+            await setStoreData('orders', orders);
+            return sendJson(res, 200, { success: true });
+          }
+          return sendJson(res, 404, { error: 'Order not found' });
         }
       }
     }
@@ -151,7 +195,7 @@ module.exports = async (req, res) => {
         const body = await parseBody(req);
         orders[idx] = { ...orders[idx], ...body, id };
         await setStoreData('orders', orders);
-        return sendJson(res, 200, orders[idx]);
+        return sendJson(res, 200, { success: true, order: orders[idx] });
       }
       if (method === 'DELETE') {
         orders.splice(idx, 1);
