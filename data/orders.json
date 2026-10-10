@@ -1,0 +1,82 @@
+[
+  {
+    "id": "21-1048",
+    "date": "2026-10-09 14:22",
+    "customer": "Karim El-Sayed",
+    "phone": "01012345678",
+    "governorate": "Cairo",
+    "address": "Zamalek, Brazil St, Bldg 14, Apt 6",
+    "items": [
+      {
+        "id": 1,
+        "name": "Midnight Drop Hoodie",
+        "size": "L",
+        "color": "#0a0a0a",
+        "qty": 1,
+        "price": 1250
+      }
+    ],
+    "subtotal": 1250,
+    "shipping": 50,
+    "discount": 0,
+    "total": 1300,
+    "payment": "Cash on Delivery",
+    "status": "pending"
+  },
+  {
+    "id": "21-1047",
+    "date": "2026-10-09 11:15",
+    "customer": "Nouran Mansour",
+    "phone": "01123456789",
+    "governorate": "Giza",
+    "address": "Sheikh Zayed, District 7, Villa 22",
+    "items": [
+      {
+        "id": 3,
+        "name": "Stone Desert Oversized",
+        "size": "M",
+        "color": "#c8b89a",
+        "qty": 1,
+        "price": 1350
+      },
+      {
+        "id": 4,
+        "name": "Chalk Essential Hoodie",
+        "size": "S",
+        "color": "#e8e3d8",
+        "qty": 1,
+        "price": 1100
+      }
+    ],
+    "subtotal": 2450,
+    "shipping": 0,
+    "discount": 100,
+    "total": 2350,
+    "payment": "Instapay",
+    "status": "confirmed"
+  },
+  {
+    "id": "21-1046",
+    "date": "2026-10-08 19:40",
+    "customer": "Omar Tarek",
+    "phone": "01234567890",
+    "governorate": "Alexandria",
+    "address": "Smouha, Victor Emmanuel Square, Apt 4B",
+    "items": [
+      {
+        "id": 5,
+        "name": "Ink Heavyweight Zip-Up",
+        "size": "XL",
+        "color": "#111111",
+        "qty": 1,
+        "price": 1450
+      }
+    ],
+    "subtotal": 1450,
+    "shipping": 65,
+    "discount": 0,
+    "total": 1515,
+    "payment": "Vodafone Cash",
+    "status": "shipped"
+  }
+]

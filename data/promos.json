@@ -1,0 +1,26 @@
+[
+  {
+    "code": "TWENTY21",
+    "type": "percentage",
+    "value": 10,
+    "min": 1000,
+    "used": 24,
+    "active": true
+  },
+  {
+    "code": "CAIRODROP",
+    "type": "fixed",
+    "value": 150,
+    "min": 1500,
+    "used": 12,
+    "active": true
+  },
+  {
+    "code": "FREESHIP",
+    "type": "fixed",
+    "value": 50,
+    "min": 2000,
+    "used": 8,
+    "active": true
+  }
+]
