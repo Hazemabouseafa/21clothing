@@ -4,6 +4,7 @@
   "description": "21 (Twenty One Clothing) — Premium Egyptian Streetwear Store & Brand Control Panel",
   "main": "server.js",
   "scripts": {
+    "build": "node -e \"console.log('21 Clothing build successful')\"",
     "start": "node server.js",
     "dev": "node server.js",
     "db:test": "node scripts/test-neon.js"

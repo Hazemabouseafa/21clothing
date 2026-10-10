@@ -38,7 +38,10 @@ const server = http.createServer(async (req, res) => {
     cleanPath = '/admin.html';
   }
 
-  const filePath = path.join(ROOT_DIR, decodeURIComponent(cleanPath));
+  let filePath = path.join(ROOT_DIR, 'public', decodeURIComponent(cleanPath));
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(ROOT_DIR, decodeURIComponent(cleanPath));
+  }
 
   // Security check: ensure path stays within ROOT_DIR
   if (!filePath.startsWith(ROOT_DIR)) {
