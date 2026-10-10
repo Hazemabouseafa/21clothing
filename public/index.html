@@ -156,6 +156,7 @@
     </a>
     <ul class="nav-links">
       <li><a href="#collection">Drop 001</a></li>
+      <li><a href="javascript:void(0)" onclick="openStoreSizeGuide('top')">Size Guide</a></li>
       <li><a href="#story">Brand Story</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -368,6 +369,69 @@
 
         <button type="submit" class="checkout-launch-btn">Confirm Order</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Size Guide Modal -->
+  <div class="drawer-overlay" id="sizeGuideOverlay" style="z-index: 230;">
+    <div class="checkout-modal-box" style="width: min(740px, 95vw); max-height: 88vh; padding: 32px 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div>
+          <span style="font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 4px;">21 Tailoring & Fit</span>
+          <h3 class="checkout-modal-title" style="margin-bottom: 4px;" id="sizeGuideModalTitle">Official Size Guide</h3>
+          <p style="font-size: 0.78rem; color: var(--muted);" id="sizeGuideModalSubtitle">Measurements in Centimeters (cm) taken laid flat</p>
+        </div>
+        <button type="button" class="drawer-close-btn" onclick="closeStoreSizeGuide()">&times;</button>
+      </div>
+
+      <!-- Size Guide Tabs (Top vs Bottom) -->
+      <div style="display: flex; gap: 10px; margin-bottom: 22px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+        <button type="button" class="filter-btn active" id="btnTabGuideTop" onclick="switchStoreSizeGuideTab('top')">
+          <span>👕</span> <span>Hoodies & Tops (الهودي والتيشرت)</span>
+        </button>
+        <button type="button" class="filter-btn" id="btnTabGuideBottom" onclick="switchStoreSizeGuideTab('bottom')">
+          <span>👖</span> <span>Pants & Bottoms (البنطلون)</span>
+        </button>
+      </div>
+
+      <!-- Measurement Table Box -->
+      <div style="overflow-x: auto; margin-bottom: 22px; border: 1px solid var(--border); border-radius: 8px; background: #09090b;">
+        <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 0.85rem;" id="storeSizeGuideTable">
+          <!-- Filled dynamically via JS -->
+        </table>
+      </div>
+
+      <!-- Fit Advice Box -->
+      <div style="background: rgba(232, 227, 216, 0.05); border: 1px solid rgba(232, 227, 216, 0.15); border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+        <h4 style="font-size: 0.82rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          <span>✦</span> <span>Fit Recommendation (نصيحة المقاس)</span>
+        </h4>
+        <p style="font-size: 0.84rem; color: #eee; line-height: 1.7;" id="storeFitNotes">
+          Model is 182 cm (78 kg) wearing Large for an oversized streetwear look.
+        </p>
+      </div>
+
+      <!-- How to measure tips -->
+      <div style="border-top: 1px solid var(--border); padding-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; font-size: 0.75rem; color: var(--muted);">
+        <div>
+          <strong style="color: #fff; display: block; margin-bottom: 4px;">📐 Chest / Width (العرض):</strong>
+          <span>Measure straight across chest from armpit seam to armpit seam.</span>
+        </div>
+        <div>
+          <strong style="color: #fff; display: block; margin-bottom: 4px;">📏 Length (الطول):</strong>
+          <span>Measure from the highest shoulder point down to bottom hem.</span>
+        </div>
+        <div>
+          <strong style="color: #fff; display: block; margin-bottom: 4px;">🔄 Waist (الوسط):</strong>
+          <span>Measured across the elastic waistband relaxed to stretched.</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; text-align: right;">
+        <button type="button" class="btn" onclick="closeStoreSizeGuide()" style="padding: 10px 24px; background: var(--white); color: #000; border: none; font-size: 0.75rem; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 4px;">
+          Got it
+        </button>
+      </div>
     </div>
   </div>
 
@@ -603,9 +667,16 @@
                 </div>
               </div>
 
-              <!-- Size Selector -->
+              <!-- Size Selector & Size Guide Modal Trigger -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase;">Size:</span>
+                ${p.sizeGuideType !== 'none' ? `
+                  <button type="button" onclick="openStoreSizeGuide('${p.sizeGuideType || 'top'}', '${escapeHtml(p.name)}')" style="background:none; border:none; color:var(--accent); font-size:0.7rem; cursor:pointer; text-decoration:underline; text-underline-offset:3px; display:inline-flex; align-items:center; gap:4px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+                    <span>📏</span> <span>Size Guide</span>
+                  </button>
+                ` : ''}
+              </div>
               <div class="size-selector-row">
-                <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase; margin-right:4px;">Size:</span>
                 ${['S', 'M', 'L', 'XL', 'XXL'].map(sz => {
                   const inStock = p.sizes ? (p.sizes[sz] > 0) : true;
                   const isSelected = sz === defaultSize;
@@ -935,6 +1006,88 @@
     function closeOrderSuccess() {
       document.getElementById('orderSuccessOverlay').classList.remove('open');
       renderStorefrontProducts();
+    }
+
+    /* ── Storefront Size Guide Controller ── */
+    let currentStoreSizeGuideTab = 'top';
+
+    function openStoreSizeGuide(guideType = 'top', productName = '') {
+      currentStoreSizeGuideTab = guideType === 'bottom' ? 'bottom' : 'top';
+      const modal = document.getElementById('sizeGuideOverlay');
+      if (modal) modal.classList.add('open');
+
+      const titleElem = document.getElementById('sizeGuideModalTitle');
+      if (titleElem) {
+        titleElem.textContent = productName ? `${productName} — Size Guide` : 'Official Size Guide (جدول المقاسات)';
+      }
+
+      const btnTop = document.getElementById('btnTabGuideTop');
+      const btnBottom = document.getElementById('btnTabGuideBottom');
+      if (btnTop && btnBottom) {
+        btnTop.classList.toggle('active', currentStoreSizeGuideTab === 'top');
+        btnBottom.classList.toggle('active', currentStoreSizeGuideTab === 'bottom');
+      }
+
+      renderStoreSizeGuideContent();
+    }
+
+    function closeStoreSizeGuide() {
+      const modal = document.getElementById('sizeGuideOverlay');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function switchStoreSizeGuideTab(tab) {
+      currentStoreSizeGuideTab = tab;
+      const btnTop = document.getElementById('btnTabGuideTop');
+      const btnBottom = document.getElementById('btnTabGuideBottom');
+      if (btnTop && btnBottom) {
+        btnTop.classList.toggle('active', tab === 'top');
+        btnBottom.classList.toggle('active', tab === 'bottom');
+      }
+      renderStoreSizeGuideContent();
+    }
+
+    function renderStoreSizeGuideContent() {
+      const guides = StoreDB.getSizeGuides() || DEFAULT_SIZE_GUIDES;
+      const guide = guides[currentStoreSizeGuideTab] || DEFAULT_SIZE_GUIDES[currentStoreSizeGuideTab];
+      const table = document.getElementById('storeSizeGuideTable');
+      const notes = document.getElementById('storeFitNotes');
+
+      if (!guide || !table) return;
+
+      const cols = guide.columns || [];
+      const rows = guide.rows || [];
+
+      let html = `
+        <thead>
+          <tr style="background: #141418; border-bottom: 1px solid var(--border);">
+            ${cols.map(c => `<th style="padding: 12px 14px; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); font-weight: 600;">${c}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 12px 14px; font-weight: 700; color: #fff;">${r.size}</td>
+              ${currentStoreSizeGuideTab === 'top' ? `
+                <td style="padding: 12px 14px; color: var(--muted);">${r.chest || '-'} cm</td>
+                <td style="padding: 12px 14px; color: var(--muted);">${r.length || '-'} cm</td>
+                <td style="padding: 12px 14px; color: var(--muted);">${r.shoulders || '-'} cm</td>
+                <td style="padding: 12px 14px; color: var(--muted);">${r.sleeve || '-'} cm</td>
+              ` : `
+                <td style="padding: 12px 14px; color: var(--muted);">${r.waist || '-'} cm</td>
+                <td style="padding: 12px 14px; color: var(--muted);">${r.length || '-'} cm</td>
+                <td style="padding: 12px 14px; color: var(--muted);">${r.thigh || '-'} cm</td>
+                <td style="padding: 12px 14px; color: var(--muted);">${r.legOpening || '-'} cm</td>
+              `}
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+      table.innerHTML = html;
+
+      if (notes) {
+        notes.textContent = guide.fitNotes || 'Relaxed streetwear fit. Select your standard size.';
+      }
     }
 
     /* ── Filter Buttons ── */

@@ -192,7 +192,46 @@ const DEFAULT_SETTINGS = {
   announcement: "FREE SHIPPING ON ORDERS OVER 2,500 EGP | CASH ON DELIVERY ACROSS EGYPT",
   showAnnouncement: "true",
   storeStatus: "open",
-  metaPixel: ""
+  metaPixel: "",
+  adminUser: "admin",
+  adminPass: "twenty21"
+};
+
+const DEFAULT_SIZE_GUIDES = {
+  top: {
+    id: "top",
+    name: "Hoodie & Shirt Size Guide",
+    nameAr: "دليل مقاسات الهوديز والتيشرتات (Top)",
+    type: "shirt",
+    description: "Relaxed streetwear oversized fit. Measurements in Centimeters (cm).",
+    unit: "cm",
+    columns: ["Size", "Chest (العرض)", "Length (الطول)", "Shoulders (الأكتاف)", "Sleeve (الكم)"],
+    rows: [
+      { size: "S", chest: "58", length: "68", shoulders: "54", sleeve: "60" },
+      { size: "M", chest: "61", length: "71", shoulders: "56", sleeve: "62" },
+      { size: "L", chest: "64", length: "74", shoulders: "58", sleeve: "64" },
+      { size: "XL", chest: "67", length: "76", shoulders: "60", sleeve: "65" },
+      { size: "XXL", chest: "70", length: "78", shoulders: "62", sleeve: "66" }
+    ],
+    fitNotes: "Model is 182 cm (78 kg) wearing Large. For oversized streetwear drape choose your usual size, or size down for standard fit."
+  },
+  bottom: {
+    id: "bottom",
+    name: "Pantalon & Sweatpants Size Guide",
+    nameAr: "دليل مقاسات البنطلون والسويت بانتس (Bottom)",
+    type: "pantalon",
+    description: "Straight-leg streetwear cut with elastic drawstring waistband. Measurements in Centimeters (cm).",
+    unit: "cm",
+    columns: ["Size", "Waist (الوسط)", "Length (الطول)", "Thigh (الفخذ)", "Leg Opening (فتحة الرجل)"],
+    rows: [
+      { size: "S", waist: "72 - 78", length: "100", thigh: "62", legOpening: "22" },
+      { size: "M", waist: "78 - 84", length: "103", thigh: "65", legOpening: "23" },
+      { size: "L", waist: "84 - 90", length: "105", thigh: "68", legOpening: "24" },
+      { size: "XL", waist: "90 - 96", length: "107", thigh: "71", legOpening: "25" },
+      { size: "XXL", waist: "96 - 104", length: "109", thigh: "74", legOpening: "26" }
+    ],
+    fitNotes: "Elastic waist band with drawstring ensures flexible comfort. Choose your usual waist size."
+  }
 };
 
 const DEFAULT_CONTENT = {
@@ -253,6 +292,9 @@ const StoreDB = {
 
         const cntRes = await fetch('/api/content');
         if (cntRes.ok) this.set('content', await cntRes.json());
+
+        const sgRes = await fetch('/api/size-guides');
+        if (sgRes.ok) this.set('sizeGuides', await sgRes.json());
       }
     } catch (e) {
       this.hasBackend = false;
@@ -266,6 +308,7 @@ const StoreDB = {
     if (!localStorage.getItem(STORAGE_PREFIX + 'shipping')) this.set('shipping', DEFAULT_SHIPPING);
     if (!localStorage.getItem(STORAGE_PREFIX + 'settings')) this.set('settings', DEFAULT_SETTINGS);
     if (!localStorage.getItem(STORAGE_PREFIX + 'content')) this.set('content', DEFAULT_CONTENT);
+    if (!localStorage.getItem(STORAGE_PREFIX + 'sizeGuides')) this.set('sizeGuides', DEFAULT_SIZE_GUIDES);
 
     if (window.location.protocol.startsWith('http')) {
       this.syncWithBackend();
@@ -446,6 +489,70 @@ const StoreDB = {
         body: JSON.stringify(cnt)
       }).catch(console.error);
     }
+  },
+
+  // ── Size Guides ──
+  getSizeGuides() { return this.get('sizeGuides', DEFAULT_SIZE_GUIDES); },
+  async setSizeGuides(sg) {
+    this.set('sizeGuides', sg);
+    if (this.hasBackend) {
+      try {
+        await fetch('/api/size-guides', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sg)
+        });
+      } catch(e) {
+        console.error(e);
+      }
+    }
+  },
+
+  // ── Admin Authentication ──
+  isAdminLoggedIn() {
+    return sessionStorage.getItem('twentyone_admin_logged') === 'true' ||
+           localStorage.getItem('twentyone_admin_remember') === 'true';
+  },
+  async loginAdmin(username, password, remember = false) {
+    username = (username || '').trim();
+    password = (password || '').trim();
+
+    if (this.hasBackend) {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        if (res.ok) {
+          sessionStorage.setItem('twentyone_admin_logged', 'true');
+          sessionStorage.setItem('twentyone_admin_user', username);
+          if (remember) localStorage.setItem('twentyone_admin_remember', 'true');
+          return { success: true };
+        } else {
+          const err = await res.json().catch(() => ({}));
+          return { success: false, error: err.error || 'Invalid credentials' };
+        }
+      } catch(e) {}
+    }
+
+    // Local validation
+    const stg = this.getSettings();
+    const validUser = (stg && stg.adminUser) || 'admin';
+    const validPass = (stg && stg.adminPass) || 'twenty21';
+
+    if (username === validUser && password === validPass) {
+      sessionStorage.setItem('twentyone_admin_logged', 'true');
+      sessionStorage.setItem('twentyone_admin_user', username);
+      if (remember) localStorage.setItem('twentyone_admin_remember', 'true');
+      return { success: true };
+    }
+    return { success: false, error: 'Invalid username or password' };
+  },
+  logoutAdmin() {
+    sessionStorage.removeItem('twentyone_admin_logged');
+    sessionStorage.removeItem('twentyone_admin_user');
+    localStorage.removeItem('twentyone_admin_remember');
   }
 };
 

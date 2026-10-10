@@ -109,9 +109,62 @@
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="brand-header">
+  <!-- LUXURY BRAND LOGIN SCREEN -->
+  <div id="adminLoginScreen" style="position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 50% 30%, #17171c 0%, #08080a 80%); padding:24px;">
+    <div style="background:#111114; border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:40px 36px; width:min(440px, 100%); box-shadow:0 24px 60px rgba(0,0,0,0.85); text-align:center;">
+      <img src="logo.png" alt="21" style="width:76px; height:76px; border-radius:50%; object-fit:contain; border:1px solid rgba(255,255,255,0.2); box-shadow:0 0 30px rgba(255,255,255,0.12); margin-bottom:18px;" />
+      <h2 style="font-family:'Playfair Display', serif; font-size:1.6rem; letter-spacing:0.18em; font-weight:600; color:#fff; margin-bottom:6px;">21 CLOTHING</h2>
+      <p style="font-size:0.75rem; letter-spacing:0.25em; text-transform:uppercase; color:var(--accent); margin-bottom:28px; opacity:0.85;">Brand Console • لوحة التحكم</p>
+      
+      <div id="loginErrorMsg" style="display:none; background:var(--danger-bg); border:1px solid rgba(239,68,68,0.3); color:var(--danger); padding:10px 14px; border-radius:8px; font-size:0.82rem; margin-bottom:20px; text-align:left;"></div>
+
+      <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" style="text-align:left;">
+        <div class="form-group" style="margin-bottom:18px;">
+          <label class="form-label" style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted);">Admin Username</label>
+          <div style="position:relative;">
+            <input type="text" class="form-input" id="loginUser" required placeholder="admin" autofocus style="padding-left:38px;" />
+            <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:0.95rem; opacity:0.5;">👤</span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:22px;">
+          <label class="form-label" style="font-size:0.78rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+            <span>Password</span>
+            <button type="button" onclick="toggleLoginPassword()" style="background:none; border:none; color:var(--accent); font-size:0.75rem; cursor:pointer; opacity:0.8;">Show / Hide</button>
+          </label>
+          <div style="position:relative;">
+            <input type="password" class="form-input" id="loginPass" required placeholder="••••••••" style="padding-left:38px; padding-right:40px;" />
+            <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:0.95rem; opacity:0.5;">🔒</span>
+            <button type="button" onclick="toggleLoginPassword()" id="loginPassToggleBtn" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.9rem;">👁️</button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; font-size:0.8rem; color:var(--text-muted);">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="loginRemember" checked style="accent-color:var(--accent); cursor:pointer;" />
+            <span>Keep me logged in</span>
+          </label>
+          <span style="font-size:0.72rem; color:var(--text-dim);">Default: admin / twenty21</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="loginSubmitBtn" style="width:100%; justify-content:center; padding:13px; font-size:0.88rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:700;">
+          Sign In to Brand Console →
+        </button>
+      </form>
+      
+      <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--border); display:flex; justify-content:center;">
+        <a href="index.html" target="_blank" style="color:var(--text-muted); text-decoration:none; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">
+          <span>🌐</span> <span>View Storefront</span> <span>↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATED DASHBOARD APPLICATION WRAPPER -->
+  <div id="adminApp" style="display:none; width:100%; min-height:100vh;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-header">
       <img src="logo.png" alt="21 Logo" class="brand-logo-img" />
       <div class="brand-title-wrap">
         <span class="brand-name">21</span>
@@ -157,6 +210,12 @@
           <span class="nav-text" id="navShipping">Shipping Rates</span>
         </button>
       </li>
+      <li class="nav-item" data-tab="sizeguide">
+        <button type="button">
+          <span class="nav-icon">📏</span>
+          <span class="nav-text" id="navSizeGuide">Size Guide</span>
+        </button>
+      </li>
       <li class="nav-item" data-tab="settings">
         <button type="button">
           <span class="nav-icon">⚙️</span>
@@ -169,6 +228,10 @@
         <span>🌐</span>
         <span id="btnViewStore">View Storefront ↗</span>
       </a>
+      <button type="button" onclick="handleAdminLogout()" class="view-store-btn" style="cursor:pointer; color:#ef4444; border-color:rgba(239,68,68,0.25); background:rgba(239,68,68,0.05); width:100%;">
+        <span>🔒</span>
+        <span id="btnAdminLogout">Sign Out</span>
+      </button>
     </div>
   </aside>
   <!-- Main Content Area -->
@@ -346,7 +409,7 @@
                 </div>
               </div>
 
-              <div class="form-row">
+              <div class="form-row" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
                 <div class="form-group">
                   <label class="form-label" id="lblProdBadge">Badge / Tag (الشارة)</label>
                   <select class="form-select" id="prodBadge">
@@ -359,6 +422,14 @@
                 <div class="form-group">
                   <label class="form-label" id="lblProdFit">Collection / Fit (القصة والوزن)</label>
                   <input type="text" class="form-input" id="prodFit" placeholder="Oversized 450 GSM" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" id="lblProdSizeGuide">Size Guide (جدول المقاسات)</label>
+                  <select class="form-select" id="prodSizeGuide">
+                    <option value="top">Top: Hoodie & Shirt (هودي وتيشرت)</option>
+                    <option value="bottom">Bottom: Pants & Pantalon (بنطلون)</option>
+                    <option value="none">None (بدون جدول)</option>
+                  </select>
                 </div>
               </div>
 
@@ -629,6 +700,27 @@
                   <option value="closed">Closed / Drop Sold Out (مغلق مؤقتاً)</option>
                 </select>
               </div>
+
+              <!-- Admin Console Security Credentials -->
+              <div class="form-group" style="background: rgba(232, 227, 216, 0.05); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 22px;">
+                <label class="form-label" style="color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                  <span>🔐 Admin Console Security (بيانات دخول لوحة التحكم)</span>
+                </label>
+                <div class="form-row">
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" id="lblAdminUser">Admin Username (اسم المستخدم)</label>
+                    <input type="text" class="form-input" id="setAdminUser" placeholder="admin" required />
+                  </div>
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" id="lblAdminPass">Admin Password (كلمة المرور)</label>
+                    <input type="text" class="form-input" id="setAdminPass" placeholder="twenty21" required />
+                  </div>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 8px;">
+                  Used to protect the Brand Console. You can change your login credentials anytime here. Default: admin / twenty21
+                </p>
+              </div>
+
               <button type="submit" class="btn btn-primary" id="btnSaveSettings">Save Store Settings</button>
             </form>
           </div>
@@ -647,8 +739,105 @@
           </div>
         </div>
       </section>
+
+      <!-- TAB 8: SIZE GUIDE MANAGER -->
+      <section class="tab-view" id="tab-sizeguide">
+        <div class="panel" style="max-width: 980px;">
+          <div class="panel-header">
+            <div class="panel-title">
+              <span>📏</span>
+              <span id="txtSizeGuideTitle">Size Guide & Measurement Tables</span>
+            </div>
+            <div class="panel-actions">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="resetSizeGuidesToDefault()" id="btnResetSizeGuide">Reset to Defaults</button>
+            </div>
+          </div>
+          <div style="padding: 24px;">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;" id="txtSizeGuideDesc">
+              Manage the measurement guides displayed on the storefront. Tops (Hoodies & Shirts) and Bottoms (Pants & Pantalon) are customized in Centimeters (CM) for each size.
+            </p>
+
+            <form id="sizeGuidesForm" onsubmit="saveSizeGuidesForm(event)">
+              <!-- TOP SECTION: HOODIES & SHIRTS -->
+              <div style="background: rgba(255,255,255,0.015); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 28px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+                      <span>👕</span> <span id="topGuideHeader">1. Tops: Hoodies & Shirts (الهوديز والتيشرتات)</span>
+                    </h3>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;" id="topGuideSub">
+                      Measurements in Centimeters (cm). Edit sizes S, M, L, XL, XXL.
+                    </p>
+                  </div>
+                  <span class="status-pill delivered" style="font-size: 0.7rem;">Top Guide</span>
+                </div>
+
+                <div class="table-container" style="margin-bottom: 16px;">
+                  <table style="width: 100%;">
+                    <thead>
+                      <tr>
+                        <th style="width: 70px;">Size</th>
+                        <th>Chest / Width (العرض سم)</th>
+                        <th>Length (الطول سم)</th>
+                        <th>Shoulders (الأكتاف سم)</th>
+                        <th>Sleeve (الكم سم)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="topSizeGuideTableBody"></tbody>
+                  </table>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" id="lblTopFitNotes">Fit Advice & Model Notes (نصائح المقاس للعميل)</label>
+                  <textarea class="form-textarea" id="topFitNotes" rows="2" placeholder="e.g. Model is 182 cm wearing Large for oversized look."></textarea>
+                </div>
+              </div>
+
+              <!-- BOTTOM SECTION: PANTS & PANTALON -->
+              <div style="background: rgba(255,255,255,0.015); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 28px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <h3 style="font-size: 1.05rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+                      <span>👖</span> <span id="bottomGuideHeader">2. Bottoms: Pants & Sweatpants (البنطلون وسويت بانتس)</span>
+                    </h3>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;" id="bottomGuideSub">
+                      Measurements in Centimeters (cm). Edit sizes S, M, L, XL, XXL.
+                    </p>
+                  </div>
+                  <span class="status-pill shipped" style="font-size: 0.7rem;">Bottom Guide</span>
+                </div>
+
+                <div class="table-container" style="margin-bottom: 16px;">
+                  <table style="width: 100%;">
+                    <thead>
+                      <tr>
+                        <th style="width: 70px;">Size</th>
+                        <th>Waist (محيط الوسط سم)</th>
+                        <th>Length (طول البنطلون سم)</th>
+                        <th>Thigh (محيط الفخذ سم)</th>
+                        <th>Leg Opening (فتحة الرجل سم)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="bottomSizeGuideTableBody"></tbody>
+                  </table>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" id="lblBottomFitNotes">Fit Advice & Waist Notes (نصائح المقاس والوسط للعميل)</label>
+                  <textarea class="form-textarea" id="bottomFitNotes" rows="2" placeholder="e.g. Elastic waistband with drawstrings."></textarea>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="submit" class="btn btn-primary" id="btnSaveSizeGuides">Save Size Guides (حفظ جداول المقاسات)</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
+</div>
 
 
 
@@ -716,7 +905,7 @@
     const i18n = {
       en: {
         controlPanel: 'Brand Console', overview: 'Overview', orders: 'Orders', hoodies: 'Hoodies',
-        content: 'Store Texts', promos: 'Promo Codes', shipping: 'Shipping Rates', settings: 'Store Settings',
+        content: 'Store Texts', promos: 'Promo Codes', shipping: 'Shipping Rates', sizeguide: 'Size Guide', settings: 'Store Settings',
         viewStore: 'View Storefront ↗', totalRevenue: 'Total Revenue', totalOrders: 'Total Orders',
         inventory: 'Hoodie Inventory', aov: 'Avg Order Value', recentOrders: 'Recent Orders',
         viewAll: 'View All Orders', storeLive: 'STORE LIVE', orderId: 'Order ID',
@@ -734,17 +923,26 @@
         lblProdOrigPrice: 'Compare At Price (EGP)',
         lblProdBadge: 'Badge / Tag',
         lblProdFit: 'Collection / Fit',
+        lblProdSizeGuide: 'Size Guide Type',
         secStockInfo: '2. Inventory by Sizes (S / M / L / XL / XXL)',
         secColorsInfo: '3. Color Variants & Photo Galleries',
         lblColorVariants: '🎨 Colors & Photos',
         lblColorVariantsHelp: 'Add color options (e.g. Midnight Black, Ash Grey) and upload multiple photos for each color.',
         addColor: '+ Add Color',
-        secFabricInfo: '4. Fabric & Material Details'
+        secFabricInfo: '4. Fabric & Material Details',
+        txtSizeGuideTitle: 'Size Guide & Measurement Tables',
+        btnResetSizeGuide: 'Reset to Defaults',
+        btnSaveSizeGuides: 'Save Size Guides',
+        topGuideHeader: '1. Tops: Hoodies & Shirts (الهوديز والتيشرتات)',
+        bottomGuideHeader: '2. Bottoms: Pants & Sweatpants (البنطلون وسويت بانتس)',
+        lblAdminUser: 'Admin Username (اسم المستخدم)',
+        lblAdminPass: 'Admin Password (كلمة المرور)',
+        btnAdminLogout: 'Sign Out (تسجيل الخروج)'
       },
       ar: {
         controlPanel: 'لوحة تحكم البراند', overview: 'نظرة عامة', orders: 'الطلبات',
         hoodies: 'الهوديز والمنتجات', content: 'نصوص الواجهة', promos: 'أكواد الخصم', shipping: 'أسعار الشحن',
-        settings: 'إعدادات المتجر وبكسل ميتا', viewStore: 'زيارة المتجر ↗', totalRevenue: 'إجمالي المبيعات',
+        sizeguide: 'جدول المقاسات', settings: 'إعدادات المتجر وبكسل ميتا', viewStore: 'زيارة المتجر ↗', totalRevenue: 'إجمالي المبيعات',
         totalOrders: 'عدد الطلبات', inventory: 'المخزون الكلي', aov: 'متوسط قيمة الطلب',
         recentOrders: 'أحدث الطلبات', viewAll: 'عرض كل الطلبات', storeLive: 'المتجر يعمل 🟢',
         orderId: 'رقم الطلب', customer: 'العميل', gov: 'المحافظة', items: 'القطع',
@@ -761,12 +959,21 @@
         lblProdOrigPrice: 'السعر قبل الخصم (EGP)',
         lblProdBadge: 'الشارة / العلامة',
         lblProdFit: 'القصة والوزن',
+        lblProdSizeGuide: 'نوع جدول المقاسات',
         secStockInfo: '2. المخزون حسب المقاسات (S / M / L / XL / XXL)',
         secColorsInfo: '3. ألوان المنتج وصور كل لون',
         lblColorVariants: '🎨 ألوان المنتج وصور كل لون',
         lblColorVariantsHelp: 'أضف خيارات الألوان (مثل أسود ملكي، رمادي) وارفع عدة صور لكل لون.',
         addColor: '+ إضافة لون',
-        secFabricInfo: '4. تفاصيل الخامة والتصنيع'
+        secFabricInfo: '4. تفاصيل الخامة والتصنيع',
+        txtSizeGuideTitle: 'إدارة جداول مقاسات المنتجات',
+        btnResetSizeGuide: 'استعادة المقاسات الأصلية',
+        btnSaveSizeGuides: 'حفظ جداول المقاسات',
+        topGuideHeader: '1. مقاسات الهوديز والتيشرتات (سم)',
+        bottomGuideHeader: '2. مقاسات البنطلون وسويت بانتس (سم)',
+        lblAdminUser: 'اسم المستخدم',
+        lblAdminPass: 'كلمة المرور',
+        btnAdminLogout: 'تسجيل الخروج'
       }
     };
 
@@ -780,8 +987,10 @@
       document.getElementById('navContent').textContent = t.content;
       document.getElementById('navPromos').textContent = t.promos;
       document.getElementById('navShipping').textContent = t.shipping;
+      if (document.getElementById('navSizeGuide')) document.getElementById('navSizeGuide').textContent = t.sizeguide;
       document.getElementById('navSettings').textContent = t.settings;
       document.getElementById('btnViewStore').textContent = t.viewStore;
+      if (document.getElementById('btnAdminLogout')) document.getElementById('btnAdminLogout').textContent = t.btnAdminLogout;
       document.getElementById('kpiSalesLabel').textContent = t.totalRevenue;
       document.getElementById('kpiOrdersLabel').textContent = t.totalOrders;
       document.getElementById('kpiStockLabel').textContent = t.inventory;
@@ -812,12 +1021,21 @@
       if (document.getElementById('lblProdOrigPrice')) document.getElementById('lblProdOrigPrice').textContent = t.lblProdOrigPrice;
       if (document.getElementById('lblProdBadge')) document.getElementById('lblProdBadge').textContent = t.lblProdBadge;
       if (document.getElementById('lblProdFit')) document.getElementById('lblProdFit').textContent = t.lblProdFit;
+      if (document.getElementById('lblProdSizeGuide')) document.getElementById('lblProdSizeGuide').textContent = t.lblProdSizeGuide;
       if (document.getElementById('secStockInfo')) document.getElementById('secStockInfo').textContent = t.secStockInfo;
       if (document.getElementById('secColorsInfo')) document.getElementById('secColorsInfo').textContent = t.secColorsInfo;
       if (document.getElementById('lblColorVariants')) document.getElementById('lblColorVariants').textContent = t.lblColorVariants;
       if (document.getElementById('lblColorVariantsHelp')) document.getElementById('lblColorVariantsHelp').textContent = t.lblColorVariantsHelp;
       if (document.getElementById('btnAddColorBtn')) document.getElementById('btnAddColorBtn').textContent = t.addColor;
       if (document.getElementById('secFabricInfo')) document.getElementById('secFabricInfo').textContent = t.secFabricInfo;
+
+      if (document.getElementById('txtSizeGuideTitle')) document.getElementById('txtSizeGuideTitle').textContent = t.txtSizeGuideTitle;
+      if (document.getElementById('btnResetSizeGuide')) document.getElementById('btnResetSizeGuide').textContent = t.btnResetSizeGuide;
+      if (document.getElementById('btnSaveSizeGuides')) document.getElementById('btnSaveSizeGuides').textContent = t.btnSaveSizeGuides;
+      if (document.getElementById('topGuideHeader')) document.getElementById('topGuideHeader').textContent = t.topGuideHeader;
+      if (document.getElementById('bottomGuideHeader')) document.getElementById('bottomGuideHeader').textContent = t.bottomGuideHeader;
+      if (document.getElementById('lblAdminUser')) document.getElementById('lblAdminUser').textContent = t.lblAdminUser;
+      if (document.getElementById('lblAdminPass')) document.getElementById('lblAdminPass').textContent = t.lblAdminPass;
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
@@ -843,9 +1061,69 @@
         content: currentLang === 'ar' ? 'تعديل نصوص ومحتوى الواجهة' : 'Storefront Content Editor',
         promos: currentLang === 'ar' ? 'أكواد الخصم والعروض' : 'Promo Codes',
         shipping: currentLang === 'ar' ? 'أسعار الشحن للمحافظات' : 'Shipping Rates',
+        sizeguide: currentLang === 'ar' ? 'إدارة جداول مقاسات المنتجات' : 'Size Guide & Measurement Tables',
         settings: currentLang === 'ar' ? 'إعدادات المتجر وبكسل ميتا' : 'Store Settings & Meta Pixel'
       };
       document.getElementById('currentTabTitle').textContent = titles[tabId] || 'Dashboard';
+    }
+
+    /* ── Admin Authentication Controller ── */
+    function checkAdminAuth() {
+      const isLogged = StoreDB.isAdminLoggedIn();
+      const loginScreen = document.getElementById('adminLoginScreen');
+      const app = document.getElementById('adminApp');
+      if (isLogged) {
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (app) app.style.display = 'flex';
+        renderAll();
+      } else {
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (app) app.style.display = 'none';
+      }
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const errBox = document.getElementById('loginErrorMsg');
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value;
+      const remember = document.getElementById('loginRemember').checked;
+
+      if (errBox) errBox.style.display = 'none';
+
+      const res = await StoreDB.loginAdmin(u, p, remember);
+      if (res && res.success) {
+        showToast(currentLang === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Welcome back!');
+        checkAdminAuth();
+      } else {
+        if (errBox) {
+          errBox.textContent = currentLang === 'ar' 
+            ? 'خطأ: اسم المستخدم أو كلمة المرور غير صحيحة.' 
+            : 'Invalid credentials. Default: admin / twenty21';
+          errBox.style.display = 'block';
+        }
+      }
+    }
+
+    function handleAdminLogout() {
+      if (confirm(currentLang === 'ar' ? 'هل تريد تسجيل الخروج من لوحة التحكم؟' : 'Sign out of Brand Console?')) {
+        StoreDB.logoutAdmin();
+        showToast(currentLang === 'ar' ? 'تم تسجيل الخروج' : 'Signed out');
+        checkAdminAuth();
+      }
+    }
+
+    function toggleLoginPassword() {
+      const passInput = document.getElementById('loginPass');
+      const toggleBtn = document.getElementById('loginPassToggleBtn');
+      if (!passInput) return;
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        if (toggleBtn) toggleBtn.textContent = '🙈';
+      } else {
+        passInput.type = 'password';
+        if (toggleBtn) toggleBtn.textContent = '👁️';
+      }
     }
 
     document.querySelectorAll('.nav-menu .nav-item').forEach(item => {
@@ -1287,6 +1565,7 @@
         const form = document.getElementById('formProduct');
         if (form) form.reset();
         document.getElementById('prodEditId').value = '';
+        if (document.getElementById('prodSizeGuide')) document.getElementById('prodSizeGuide').value = 'top';
         currentProductVariants = [
           { colorName: 'Midnight Black', colorHex: '#0a0a0a', images: [] }
         ];
@@ -1304,6 +1583,7 @@
         document.getElementById('prodBadge').value = p.badge || '';
         document.getElementById('prodFit').value = p.fit || '';
         document.getElementById('prodDesc').value = p.desc || '';
+        if (document.getElementById('prodSizeGuide')) document.getElementById('prodSizeGuide').value = p.sizeGuideType || 'top';
 
         if (p.colorVariants && p.colorVariants.length > 0) {
           currentProductVariants = JSON.parse(JSON.stringify(p.colorVariants));
@@ -1364,6 +1644,7 @@
         originalPrice: Number(document.getElementById('prodOriginalPrice').value) || null,
         badge: document.getElementById('prodBadge').value,
         fit: document.getElementById('prodFit').value.trim() || 'Oversized Fit',
+        sizeGuideType: (document.getElementById('prodSizeGuide') ? document.getElementById('prodSizeGuide').value : 'top'),
         colorVariants: currentProductVariants,
         colorTheme: firstColor.colorName,
         colors: currentProductVariants.map(v => v.colorHex),
@@ -1583,6 +1864,8 @@
       document.getElementById('setAnnouncement').value = set.announcement || '';
       document.getElementById('setShowAnnouncement').value = set.showAnnouncement || 'true';
       document.getElementById('setStoreStatus').value = set.storeStatus || 'open';
+      if (document.getElementById('setAdminUser')) document.getElementById('setAdminUser').value = set.adminUser || 'admin';
+      if (document.getElementById('setAdminPass')) document.getElementById('setAdminPass').value = set.adminPass || 'twenty21';
       checkDatabaseStatus();
     }
 
@@ -1593,10 +1876,103 @@
         waNumber: document.getElementById('setWaNumber').value.trim(),
         announcement: document.getElementById('setAnnouncement').value.trim(),
         showAnnouncement: document.getElementById('setShowAnnouncement').value,
-        storeStatus: document.getElementById('setStoreStatus').value
+        storeStatus: document.getElementById('setStoreStatus').value,
+        adminUser: document.getElementById('setAdminUser') ? document.getElementById('setAdminUser').value.trim() : 'admin',
+        adminPass: document.getElementById('setAdminPass') ? document.getElementById('setAdminPass').value : 'twenty21'
       };
       await StoreDB.setSettings(updated);
-      showToast('Store settings & Meta Pixel saved!');
+      showToast(currentLang === 'ar' ? 'تم حفظ إعدادات المتجر وبيانات الدخول' : 'Store settings & credentials saved!');
+    }
+
+    /* ── Size Guides Controller ── */
+    function loadSizeGuides() {
+      const guides = StoreDB.getSizeGuides() || DEFAULT_SIZE_GUIDES;
+      const topGuide = guides.top || DEFAULT_SIZE_GUIDES.top;
+      const bottomGuide = guides.bottom || DEFAULT_SIZE_GUIDES.bottom;
+
+      const topTbody = document.getElementById('topSizeGuideTableBody');
+      if (topTbody && topGuide.rows) {
+        topTbody.innerHTML = topGuide.rows.map(row => `
+          <tr data-size="${row.size}">
+            <td style="font-weight:700; color:var(--accent); font-size:0.9rem;">${row.size}</td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.chest || '')}" data-field="chest" /></td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.length || '')}" data-field="length" /></td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.shoulders || '')}" data-field="shoulders" /></td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.sleeve || '')}" data-field="sleeve" /></td>
+          </tr>
+        `).join('');
+      }
+      if (document.getElementById('topFitNotes')) {
+        document.getElementById('topFitNotes').value = topGuide.fitNotes || '';
+      }
+
+      const bottomTbody = document.getElementById('bottomSizeGuideTableBody');
+      if (bottomTbody && bottomGuide.rows) {
+        bottomTbody.innerHTML = bottomGuide.rows.map(row => `
+          <tr data-size="${row.size}">
+            <td style="font-weight:700; color:#c084fc; font-size:0.9rem;">${row.size}</td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.waist || '')}" data-field="waist" /></td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.length || '')}" data-field="length" /></td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.thigh || '')}" data-field="thigh" /></td>
+            <td><input type="text" class="form-input" style="padding:6px 10px; font-size:0.82rem;" value="${escapeHtml(row.legOpening || '')}" data-field="legOpening" /></td>
+          </tr>
+        `).join('');
+      }
+      if (document.getElementById('bottomFitNotes')) {
+        document.getElementById('bottomFitNotes').value = bottomGuide.fitNotes || '';
+      }
+    }
+
+    async function saveSizeGuidesForm(e) {
+      e.preventDefault();
+      const current = StoreDB.getSizeGuides() || DEFAULT_SIZE_GUIDES;
+
+      const topRows = [];
+      document.querySelectorAll('#topSizeGuideTableBody tr').forEach(tr => {
+        const sz = tr.dataset.size;
+        topRows.push({
+          size: sz,
+          chest: tr.querySelector('input[data-field="chest"]').value.trim(),
+          length: tr.querySelector('input[data-field="length"]').value.trim(),
+          shoulders: tr.querySelector('input[data-field="shoulders"]').value.trim(),
+          sleeve: tr.querySelector('input[data-field="sleeve"]').value.trim()
+        });
+      });
+
+      const bottomRows = [];
+      document.querySelectorAll('#bottomSizeGuideTableBody tr').forEach(tr => {
+        const sz = tr.dataset.size;
+        bottomRows.push({
+          size: sz,
+          waist: tr.querySelector('input[data-field="waist"]').value.trim(),
+          length: tr.querySelector('input[data-field="length"]').value.trim(),
+          thigh: tr.querySelector('input[data-field="thigh"]').value.trim(),
+          legOpening: tr.querySelector('input[data-field="legOpening"]').value.trim()
+        });
+      });
+
+      const updated = {
+        top: {
+          ...(current.top || DEFAULT_SIZE_GUIDES.top),
+          rows: topRows,
+          fitNotes: document.getElementById('topFitNotes').value.trim()
+        },
+        bottom: {
+          ...(current.bottom || DEFAULT_SIZE_GUIDES.bottom),
+          rows: bottomRows,
+          fitNotes: document.getElementById('bottomFitNotes').value.trim()
+        }
+      };
+
+      await StoreDB.setSizeGuides(updated);
+      showToast(currentLang === 'ar' ? 'تم حفظ جداول المقاسات بنجاح' : 'Size Guides saved successfully!');
+    }
+
+    async function resetSizeGuidesToDefault() {
+      if (!confirm(currentLang === 'ar' ? 'هل تريد استعادة جداول المقاسات الافتراضية؟' : 'Reset size guides to defaults?')) return;
+      await StoreDB.setSizeGuides(DEFAULT_SIZE_GUIDES);
+      loadSizeGuides();
+      showToast(currentLang === 'ar' ? 'تمت استعادة المقاسات الأصلية' : 'Reset to default measurements');
     }
 
     function exportOrdersToCSV() {
@@ -1634,6 +2010,7 @@
         StoreDB.set('shipping', DEFAULT_SHIPPING);
         StoreDB.set('settings', DEFAULT_SETTINGS);
         StoreDB.set('content', DEFAULT_CONTENT);
+        StoreDB.set('sizeGuides', DEFAULT_SIZE_GUIDES);
       }
       showToast('Sample data reloaded');
       renderAll();
@@ -1655,13 +2032,15 @@
       renderPromos();
       loadShippingRates();
       loadStoreSettings();
+      loadSizeGuides();
     }
 
     document.getElementById('orderFilterStatus').addEventListener('change', renderOrders);
     window.addEventListener('storedb_change', renderAll);
     window.addEventListener('storage', renderAll);
 
-    renderAll();
+    // Initial Auth Check
+    checkAdminAuth();
   </script>
 </body>
 </html>

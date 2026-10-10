@@ -202,6 +202,37 @@ module.exports = async (req, res) => {
       }
     }
 
+    // ── /api/size-guides ──
+    if (pathname === '/api/size-guides') {
+      if (method === 'GET') return sendJson(res, 200, await getStoreData('sizeGuides'));
+      if (method === 'POST' || method === 'PUT') {
+        const body = await parseBody(req);
+        await setStoreData('sizeGuides', body);
+        return sendJson(res, 200, body);
+      }
+    }
+
+    // ── /api/auth/login ──
+    if (pathname === '/api/auth/login' && method === 'POST') {
+      const body = await parseBody(req);
+      const settings = await getStoreData('settings');
+      const validUser = (settings && settings.adminUser) || 'admin';
+      const validPass = (settings && settings.adminPass) || 'twenty21';
+
+      if (body.username === validUser && body.password === validPass) {
+        return sendJson(res, 200, {
+          success: true,
+          token: '21_auth_' + Buffer.from(validUser + ':' + Date.now()).toString('base64'),
+          user: validUser
+        });
+      } else {
+        return sendJson(res, 401, {
+          success: false,
+          error: 'Invalid username or password'
+        });
+      }
+    }
+
     // ── /api/reset ──
     if (pathname === '/api/reset' && method === 'POST') {
       await resetStoreData();
