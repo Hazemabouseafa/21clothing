@@ -360,73 +360,133 @@ const StoreDB = {
 
       let anySuccess = false;
 
-      // Check if backend indicates live cloud database (Neon) is active
-      const isCloudConnected = (pRes.status === 'fulfilled' && pRes.value.headers && pRes.value.headers.get('x-db-connected') === 'true');
-
+      // ── 1. Smart Products Bidirectional Sync ──
       if (pRes.status === 'fulfilled' && pRes.value.ok) {
         anySuccess = true;
         const remoteProducts = await pRes.value.json();
         const localProducts = this.get('products', []);
 
-        if (isCloudConnected) {
-          // Live Neon Postgres is single source of truth across all devices
-          this.set('products', remoteProducts);
-        } else {
-          // Serverless local fallback mode:
-          // Protect locally created/custom products against being wiped by static backend defaults
-          if (Array.isArray(remoteProducts)) {
-            if (!localProducts || localProducts.length === 0) {
-              this.set('products', remoteProducts);
-            } else if (remoteProducts.length >= localProducts.length) {
-              this.set('products', remoteProducts);
-            } else {
-              console.log('[StoreDB] Preserving local custom products against backend fallback defaults');
-            }
+        if (Array.isArray(remoteProducts)) {
+          const productMap = new Map();
+          // Seed remote items
+          remoteProducts.forEach(p => {
+            if (p && p.id) productMap.set(Number(p.id), p);
+          });
+
+          // Reconcile local items
+          let hasLocalNewItems = false;
+          if (Array.isArray(localProducts)) {
+            localProducts.forEach(lp => {
+              if (lp && lp.id) {
+                const numId = Number(lp.id);
+                if (!productMap.has(numId)) {
+                  productMap.set(numId, lp);
+                  hasLocalNewItems = true;
+                } else {
+                  const rem = productMap.get(numId);
+                  // Merge local colorVariants or custom edits if remote is less detailed
+                  if (lp.colorVariants && lp.colorVariants.length && (!rem.colorVariants || !rem.colorVariants.length)) {
+                    productMap.set(numId, { ...rem, ...lp });
+                    hasLocalNewItems = true;
+                  }
+                }
+              }
+            });
+          }
+
+          const mergedProducts = Array.from(productMap.values()).sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
+          this.set('products', mergedProducts);
+
+          // If local has items not yet on the server, push to server so all devices sync up
+          if (hasLocalNewItems && this.isOnline()) {
+            console.log('[StoreDB] Automatically syncing local products to server...');
+            this.saveProductOrder(mergedProducts).catch(() => {});
           }
         }
       }
 
+      // ── 2. Orders Sync ──
       if (oRes.status === 'fulfilled' && oRes.value.ok) {
         anySuccess = true;
         const remoteOrders = await oRes.value.json();
         const localOrders = this.get('orders', []);
-        if (isCloudConnected || !localOrders || !localOrders.length || remoteOrders.length >= localOrders.length) {
-          this.set('orders', remoteOrders);
+        if (Array.isArray(remoteOrders)) {
+          const orderMap = new Map();
+          remoteOrders.forEach(o => { if (o && o.id) orderMap.set(String(o.id), o); });
+          if (Array.isArray(localOrders)) {
+            localOrders.forEach(lo => {
+              if (lo && lo.id && !orderMap.has(String(lo.id))) {
+                orderMap.set(String(lo.id), lo);
+              }
+            });
+          }
+          this.set('orders', Array.from(orderMap.values()));
         }
       }
 
+      // ── 3. Promos Sync ──
       if (prRes.status === 'fulfilled' && prRes.value.ok) {
         anySuccess = true;
         this.set('promos', await prRes.value.json());
       }
 
+      // ── 4. Shipping Sync ──
       if (shRes.status === 'fulfilled' && shRes.value.ok) {
         anySuccess = true;
         this.set('shipping', await shRes.value.json());
       }
 
+      // ── 5. Smart Settings Reconciler (Social Links, WhatsApp, Announcements) ──
       if (stRes.status === 'fulfilled' && stRes.value.ok) {
         anySuccess = true;
-        const remoteSettings = await stRes.value.json();
-        const localSettings = this.get('settings', {});
-        if (isCloudConnected) {
-          this.set('settings', remoteSettings);
-        } else {
-          this.set('settings', { ...remoteSettings, ...localSettings });
+        const remoteSettings = await stRes.value.json() || {};
+        const localSettings = this.get('settings', {}) || {};
+        
+        let settingsNeedSync = false;
+        const mergedSettings = { ...remoteSettings, ...localSettings };
+
+        // Ensure non-empty social links and phone numbers from either device are preserved
+        ['instagram', 'tiktok', 'facebook', 'whatsapp', 'waNumber', 'announcement', 'showAnnouncement', 'metaPixel'].forEach(k => {
+          if (localSettings[k] && String(localSettings[k]).trim() && (!remoteSettings[k] || !String(remoteSettings[k]).trim())) {
+            mergedSettings[k] = String(localSettings[k]).trim();
+            settingsNeedSync = true;
+          } else if (remoteSettings[k] && String(remoteSettings[k]).trim()) {
+            mergedSettings[k] = String(remoteSettings[k]).trim();
+          }
+        });
+
+        this.set('settings', mergedSettings);
+
+        if (settingsNeedSync && this.isOnline()) {
+          console.log('[StoreDB] Automatically syncing local settings to server...');
+          this.setSettings(mergedSettings).catch(() => {});
         }
       }
 
+      // ── 6. Smart Content Reconciler (Texts, Hero, Story) ──
       if (cRes.status === 'fulfilled' && cRes.value.ok) {
         anySuccess = true;
-        const remoteContent = await cRes.value.json();
-        const localContent = this.get('content', {});
-        if (isCloudConnected) {
-          this.set('content', remoteContent);
-        } else {
-          this.set('content', { ...remoteContent, ...localContent });
+        const remoteContent = await cRes.value.json() || {};
+        const localContent = this.get('content', {}) || {};
+
+        let contentNeedSync = false;
+        const mergedContent = { ...remoteContent, ...localContent };
+
+        Object.keys(localContent).forEach(k => {
+          if (localContent[k] && localContent[k] !== DEFAULT_CONTENT[k] && (!remoteContent[k] || remoteContent[k] === DEFAULT_CONTENT[k])) {
+            mergedContent[k] = localContent[k];
+            contentNeedSync = true;
+          }
+        });
+
+        this.set('content', mergedContent);
+
+        if (contentNeedSync && this.isOnline()) {
+          this.setContent(mergedContent).catch(() => {});
         }
       }
 
+      // ── 7. Size Guides Sync ──
       if (sgRes.status === 'fulfilled' && sgRes.value.ok) {
         anySuccess = true;
         this.set('sizeGuides', await sgRes.value.json());
@@ -442,6 +502,44 @@ const StoreDB = {
     } catch (e) {
       console.error('[StoreDB sync error]', e);
     }
+  },
+
+  exportBackupData() {
+    const bundle = {
+      version: '21.3',
+      timestamp: new Date().toISOString(),
+      products: this.getProducts(),
+      orders: this.getOrders(),
+      promos: this.getPromos(),
+      shipping: this.getShipping(),
+      settings: this.getSettings(),
+      content: this.getContent(),
+      sizeGuides: this.getSizeGuides()
+    };
+    return JSON.stringify(bundle, null, 2);
+  },
+
+  async importBackupData(raw) {
+    if (!raw) throw new Error('Empty backup data');
+    let bundle = null;
+    try {
+      bundle = typeof raw === 'object' ? raw : JSON.parse(raw);
+    } catch(e) {
+      throw new Error('Invalid JSON format');
+    }
+
+    if (bundle.products && Array.isArray(bundle.products)) this.set('products', bundle.products);
+    if (bundle.orders && Array.isArray(bundle.orders)) this.set('orders', bundle.orders);
+    if (bundle.promos && Array.isArray(bundle.promos)) this.set('promos', bundle.promos);
+    if (bundle.shipping) this.set('shipping', bundle.shipping);
+    if (bundle.settings) this.set('settings', bundle.settings);
+    if (bundle.content) this.set('content', bundle.content);
+    if (bundle.sizeGuides) this.set('sizeGuides', bundle.sizeGuides);
+
+    if (this.isOnline()) {
+      await this.syncAllToCloud();
+    }
+    return true;
   },
 
   async syncAllToCloud() {

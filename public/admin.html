@@ -419,7 +419,8 @@
             <span style="font-family:'Playfair Display', serif; font-size:1.15rem; font-weight:700; letter-spacing:0.1em; color:#fff;">21</span>
           </div>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="syncAllDevicesNow()" style="padding:4px 8px; font-size:0.72rem;" title="مزامنة بين الأجهزة">☁️ مزامنة</button>
           <div class="status-badge-live" style="padding:4px 8px; font-size:0.68rem;">
             <div class="status-dot"></div>
             <span id="mobileStoreStatusLabel">LIVE</span>
@@ -463,6 +464,9 @@
           <span id="currentTabTitle">Brand Overview</span>
         </div>
         <div class="topbar-actions">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="syncAllDevicesNow()" style="padding:6px 12px; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px;" title="مزامنة فورية بين الموبايل والكمبيوتر">
+            <span>☁️</span> <span id="topbarSyncBtn">مزامنة الأجهزة</span>
+          </button>
           <div class="status-badge-live">
             <div class="status-dot"></div>
             <span id="storeStatusLabel">STORE LIVE</span>
@@ -1052,6 +1056,60 @@
           </div>
         </div>
 
+        <!-- Instant Device Sync & Transfer Card (Mobile ⇄ Desktop) -->
+        <div class="panel" style="max-width: 680px; border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.03);">
+          <div class="panel-header" style="border-bottom-color: rgba(99, 102, 241, 0.2);">
+            <div class="panel-title" style="color: #818cf8; display:flex; align-items:center; gap:8px;">
+              <span>📲 ⇄ 💻</span> 
+              <span id="txtSyncCardTitle">نقل ومزامنة البيانات الفورية بين الموبايل والكمبيوتر (Cross-Device Sync)</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="syncAllDevicesNow()" style="font-size:0.75rem;">
+              ☁️ مزامنة سحابية
+            </button>
+          </div>
+          <div style="padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+            <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 8px; padding: 14px; font-size: 0.82rem; line-height: 1.6;">
+              <p style="margin: 0 0 6px 0; font-weight: 600; color: #a5b4fc;">
+                💡 حل مشكلة ظهور التعديلات على الموبايل وعدم ظهورها على الكمبيوتر (أو العكس):
+              </p>
+              <span style="color: var(--text-muted);">
+                إذا أضفت منتجاً أو روابط سوشيال على الموبايل وتريد نقلها فوراً للكمبيوتر: اضغط على <b>"نسخ كود المزامنة"</b> في الموبايل، ثم افتح نفس الصفحة على الكمبيوتر والصق الكود واضغط <b>"تطبيق واستيراد"</b> لتطابق كل شيء فوراً بدون أي تأخير!
+              </span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <label class="form-label" style="margin:0; font-weight:600; font-size:0.85rem; color:#fff;">
+                  1. نسخ كود البيانات من هذا الجهاز (Export):
+                </label>
+                <button type="button" class="btn btn-primary btn-sm" onclick="copyDeviceSyncCode()" style="font-size:0.78rem;">
+                  📋 نسخ كود المزامنة الكامل (Copy Sync Code)
+                </button>
+              </div>
+              <p style="font-size:0.75rem; color:var(--text-dim); margin:0;">
+                ينسخ جميع المنتجات الجديدة، صور الألوان، المخزون، روابط السوشيال، وأسعار الشحن من هذا الجهاز إلى الحافظة.
+              </p>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 4px 0;" />
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <label class="form-label" style="margin:0; font-weight:600; font-size:0.85rem; color:#fff;">
+                2. استيراد كود البيانات من جهاز آخر (Import):
+              </label>
+              <textarea class="form-textarea" id="deviceSyncCodeInput" rows="3" placeholder="الصق كود المزامنة المنسوخ من الموبايل أو الكمبيوتر هنا..." style="font-size:0.78rem; font-family:monospace;"></textarea>
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="applyDeviceSyncCode()" style="border-color:#818cf8; color:#a5b4fc; font-weight:600; font-size:0.8rem;">
+                  📥 تطبيق واستيراد البيانات الآن (Apply)
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="syncAllDevicesNow()" style="font-size:0.8rem;">
+                  ☁️ فحص وتحديث السيرفر (Refresh Cloud)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="panel" style="max-width: 680px; border-color: rgba(239,68,68,0.3);">
           <div class="panel-header">
             <div class="panel-title" style="color: var(--danger);"><span>⚠️</span> <span id="txtDataMgmtTitle">Data & Backup</span></div>
@@ -1273,7 +1331,9 @@
         lblTiktok: 'TikTok URL',
         lblFacebook: 'Facebook URL',
         lblWhatsappSocial: 'WhatsApp Direct Link / Phone',
-        txtSocialDesc: 'The luxury icons will automatically appear in the storefront navigation header and footer. Blank links are hidden automatically.'
+        txtSocialDesc: 'The luxury icons will automatically appear in the storefront navigation header and footer. Blank links are hidden automatically.',
+        topbarSyncBtn: 'Sync Devices',
+        txtSyncCardTitle: 'Cross-Device Instant Sync & Transfer'
       },
       ar: {
         controlPanel: 'لوحة تحكم البراند', overview: 'نظرة عامة', orders: 'الطلبات',
@@ -1319,13 +1379,17 @@
         lblTiktok: 'رابط تيك توك (TikTok)',
         lblFacebook: 'رابط فيسبوك (Facebook)',
         lblWhatsappSocial: 'رابط أو رقم واتساب (WhatsApp)',
-        txtSocialDesc: 'ستظهر الأيقونات الفاخرة تلقائياً في أعلى شريط التنقل بالمتجر والفوتر بالأسفل. الحقول الفارغة تختفي تلقائياً.'
+        txtSocialDesc: 'ستظهر الأيقونات الفاخرة تلقائياً في أعلى شريط التنقل بالمتجر والفوتر بالأسفل. الحقول الفارغة تختفي تلقائياً.',
+        topbarSyncBtn: 'مزامنة الأجهزة',
+        txtSyncCardTitle: 'نقل ومزامنة البيانات الفورية بين الموبايل والكمبيوتر'
       }
     };
 
     function updateLanguageUI() {
       const t = i18n[currentLang];
       document.documentElement.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+      if (document.getElementById('topbarSyncBtn')) document.getElementById('topbarSyncBtn').textContent = t.topbarSyncBtn;
+      if (document.getElementById('txtSyncCardTitle')) document.getElementById('txtSyncCardTitle').textContent = t.txtSyncCardTitle;
       document.getElementById('txtControlPanel').textContent = t.controlPanel;
       document.getElementById('navOverview').textContent = t.overview;
       document.getElementById('navOrders').textContent = t.orders;
@@ -2405,8 +2469,7 @@
         if (res && res.success) {
           showToast(currentLang === 'ar' ? `تمت المزامنة بنجاح (${res.count} أقسام)!` : `Synced successfully (${res.count} categories)!`);
           await StoreDB.syncWithBackend();
-          renderProductsTable();
-          renderOrdersTable();
+          renderAll();
         } else {
           showToast(currentLang === 'ar' ? `فشلت المزامنة: ${res.error || 'خطأ'}` : `Sync failed: ${res.error || 'Error'}`);
         }
@@ -2414,6 +2477,66 @@
         showToast(`Sync error: ${e.message}`);
       } finally {
         if (btn) btn.disabled = false;
+      }
+    }
+
+    /* ── Cross-Device Sync & Transfer ── */
+    async function syncAllDevicesNow() {
+      showToast(currentLang === 'ar' ? 'جاري مزامنة المنتجات والإعدادات سحابياً...' : 'Syncing store data across devices...');
+      try {
+        if (window.StoreDB && typeof StoreDB.syncWithBackend === 'function') {
+          await StoreDB.syncWithBackend();
+        }
+        if (window.StoreDB && typeof StoreDB.syncAllToCloud === 'function') {
+          await StoreDB.syncAllToCloud();
+        }
+        await checkDatabaseStatus(false);
+        renderAll();
+        showToast(currentLang === 'ar' ? '✅ تمت المزامنة بنجاح! جميع الأجهزة محدثة الآن' : '✅ Sync complete! All devices updated.');
+      } catch (e) {
+        console.error('Sync error:', e);
+        renderAll();
+        showToast(currentLang === 'ar' ? 'تم تحديث البيانات محلياً' : 'Local data refreshed');
+      }
+    }
+
+    async function copyDeviceSyncCode() {
+      try {
+        const data = StoreDB.exportBackupData();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(data);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = data;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        showToast(currentLang === 'ar'
+          ? '📋 تم نسخ كود البيانات! افتح لوحة التحكم على جهازك الآخر واضغط تطبيق واستيراد'
+          : '📋 Sync code copied! Paste it in Admin on your other device.');
+      } catch (err) {
+        alert((currentLang === 'ar' ? 'حدث خطأ في النسخ: ' : 'Copy error: ') + err.message);
+      }
+    }
+
+    async function applyDeviceSyncCode() {
+      const input = document.getElementById('deviceSyncCodeInput');
+      const code = input ? input.value.trim() : '';
+      if (!code) {
+        showToast(currentLang === 'ar' ? 'يرجى لصق كود المزامنة أولاً' : 'Please paste sync code first');
+        return;
+      }
+      try {
+        await StoreDB.importBackupData(code);
+        if (input) input.value = '';
+        renderAll();
+        showToast(currentLang === 'ar' ? '🎉 تم استيراد وتطبيق كافة البيانات والمنتجات بنجاح!' : '🎉 All store data imported successfully!');
+      } catch (err) {
+        alert((currentLang === 'ar' ? 'كود المزامنة غير صالح: ' : 'Invalid sync code: ') + err.message);
       }
     }
 
