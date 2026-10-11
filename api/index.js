@@ -39,8 +39,31 @@ function sendJson(res, statusCode, data, req) {
 
 module.exports = async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
-  // Normalize pathname: remove trailing slash if any (except root)
-  let pathname = parsedUrl.pathname.replace(/\/+$/, '') || '/';
+  
+  // When Vercel rewrites /api/(.*) -> /api/index.js:
+  // req.url or parsedUrl.pathname becomes '/api/index.js'.
+  // Vercel provides the original path via headers:
+  // 'x-matched-path', 'x-now-route-matches', 'x-invoke-path', or req.url
+  let rawPath = req.headers['x-matched-path'] ||
+                req.headers['x-invoke-path'] ||
+                req.headers['x-forwarded-uri'] ||
+                parsedUrl.pathname;
+
+  // If rawPath is still '/api/index.js' or starts with '/api/index.js', check query params or fallback
+  if (rawPath === '/api/index.js' || rawPath === '/api/index') {
+    if (parsedUrl.query && parsedUrl.query._subpath) {
+      rawPath = '/api/' + parsedUrl.query._subpath;
+    } else if (parsedUrl.query && parsedUrl.query['1']) {
+      rawPath = '/api/' + parsedUrl.query['1'];
+    } else if (req.headers['x-now-route-matches']) {
+      try {
+        const matches = new URLSearchParams(req.headers['x-now-route-matches']);
+        if (matches.get('1')) rawPath = '/api/' + matches.get('1');
+      } catch(e) {}
+    }
+  }
+
+  let pathname = (url.parse(rawPath).pathname || '/').replace(/\/+$/, '') || '/';
   const method = req.method;
 
   if (method === 'OPTIONS') {
