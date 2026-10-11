@@ -360,48 +360,14 @@ const StoreDB = {
 
       let anySuccess = false;
 
-      // ── 1. Smart Products Bidirectional Sync ──
+      // ── 1. Authoritative Products Sync from Cloud DB ──
       if (pRes.status === 'fulfilled' && pRes.value.ok) {
         anySuccess = true;
         const remoteProducts = await pRes.value.json();
-        const localProducts = this.get('products', []);
 
         if (Array.isArray(remoteProducts)) {
-          const productMap = new Map();
-          // Seed remote items
-          remoteProducts.forEach(p => {
-            if (p && p.id) productMap.set(Number(p.id), p);
-          });
-
-          // Reconcile local items
-          let hasLocalNewItems = false;
-          if (Array.isArray(localProducts)) {
-            localProducts.forEach(lp => {
-              if (lp && lp.id) {
-                const numId = Number(lp.id);
-                if (!productMap.has(numId)) {
-                  productMap.set(numId, lp);
-                  hasLocalNewItems = true;
-                } else {
-                  const rem = productMap.get(numId);
-                  // Merge local colorVariants or custom edits if remote is less detailed
-                  if (lp.colorVariants && lp.colorVariants.length && (!rem.colorVariants || !rem.colorVariants.length)) {
-                    productMap.set(numId, { ...rem, ...lp });
-                    hasLocalNewItems = true;
-                  }
-                }
-              }
-            });
-          }
-
-          const mergedProducts = Array.from(productMap.values()).sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
-          this.set('products', mergedProducts);
-
-          // If local has items not yet on the server, push to server so all devices sync up
-          if (hasLocalNewItems && this.isOnline()) {
-            console.log('[StoreDB] Automatically syncing local products to server...');
-            this.saveProductOrder(mergedProducts).catch(() => {});
-          }
+          const sorted = [...remoteProducts].sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
+          this.set('products', sorted);
         }
       }
 
@@ -409,18 +375,8 @@ const StoreDB = {
       if (oRes.status === 'fulfilled' && oRes.value.ok) {
         anySuccess = true;
         const remoteOrders = await oRes.value.json();
-        const localOrders = this.get('orders', []);
         if (Array.isArray(remoteOrders)) {
-          const orderMap = new Map();
-          remoteOrders.forEach(o => { if (o && o.id) orderMap.set(String(o.id), o); });
-          if (Array.isArray(localOrders)) {
-            localOrders.forEach(lo => {
-              if (lo && lo.id && !orderMap.has(String(lo.id))) {
-                orderMap.set(String(lo.id), lo);
-              }
-            });
-          }
-          this.set('orders', Array.from(orderMap.values()));
+          this.set('orders', remoteOrders);
         }
       }
 
@@ -436,54 +392,18 @@ const StoreDB = {
         this.set('shipping', await shRes.value.json());
       }
 
-      // ── 5. Smart Settings Reconciler (Social Links, WhatsApp, Announcements) ──
+      // ── 5. Settings Sync ──
       if (stRes.status === 'fulfilled' && stRes.value.ok) {
         anySuccess = true;
         const remoteSettings = await stRes.value.json() || {};
-        const localSettings = this.get('settings', {}) || {};
-        
-        let settingsNeedSync = false;
-        const mergedSettings = { ...remoteSettings, ...localSettings };
-
-        // Ensure non-empty social links and phone numbers from either device are preserved
-        ['instagram', 'tiktok', 'facebook', 'whatsapp', 'waNumber', 'announcement', 'showAnnouncement', 'metaPixel'].forEach(k => {
-          if (localSettings[k] && String(localSettings[k]).trim() && (!remoteSettings[k] || !String(remoteSettings[k]).trim())) {
-            mergedSettings[k] = String(localSettings[k]).trim();
-            settingsNeedSync = true;
-          } else if (remoteSettings[k] && String(remoteSettings[k]).trim()) {
-            mergedSettings[k] = String(remoteSettings[k]).trim();
-          }
-        });
-
-        this.set('settings', mergedSettings);
-
-        if (settingsNeedSync && this.isOnline()) {
-          console.log('[StoreDB] Automatically syncing local settings to server...');
-          this.setSettings(mergedSettings).catch(() => {});
-        }
+        this.set('settings', remoteSettings);
       }
 
-      // ── 6. Smart Content Reconciler (Texts, Hero, Story) ──
+      // ── 6. Content Sync ──
       if (cRes.status === 'fulfilled' && cRes.value.ok) {
         anySuccess = true;
         const remoteContent = await cRes.value.json() || {};
-        const localContent = this.get('content', {}) || {};
-
-        let contentNeedSync = false;
-        const mergedContent = { ...remoteContent, ...localContent };
-
-        Object.keys(localContent).forEach(k => {
-          if (localContent[k] && localContent[k] !== DEFAULT_CONTENT[k] && (!remoteContent[k] || remoteContent[k] === DEFAULT_CONTENT[k])) {
-            mergedContent[k] = localContent[k];
-            contentNeedSync = true;
-          }
-        });
-
-        this.set('content', mergedContent);
-
-        if (contentNeedSync && this.isOnline()) {
-          this.setContent(mergedContent).catch(() => {});
-        }
+        this.set('content', remoteContent);
       }
 
       // ── 7. Size Guides Sync ──
@@ -565,32 +485,33 @@ const StoreDB = {
   },
 
   init() {
-    if (!localStorage.getItem(STORAGE_PREFIX + 'products')) this.set('products', DEFAULT_PRODUCTS);
-    if (!localStorage.getItem(STORAGE_PREFIX + 'orders')) this.set('orders', DEFAULT_ORDERS);
-    if (!localStorage.getItem(STORAGE_PREFIX + 'promos')) this.set('promos', DEFAULT_PROMOS);
-    if (!localStorage.getItem(STORAGE_PREFIX + 'shipping')) this.set('shipping', DEFAULT_SHIPPING);
-    if (!localStorage.getItem(STORAGE_PREFIX + 'settings')) this.set('settings', DEFAULT_SETTINGS);
-    if (!localStorage.getItem(STORAGE_PREFIX + 'content')) this.set('content', DEFAULT_CONTENT);
-    if (!localStorage.getItem(STORAGE_PREFIX + 'sizeGuides')) this.set('sizeGuides', DEFAULT_SIZE_GUIDES);
+    // Only seed local defaults on initial local/offline run
+    const isOnlineEnv = typeof window !== 'undefined' && window.location.protocol.startsWith('http');
+    if (!isOnlineEnv) {
+      if (!localStorage.getItem(STORAGE_PREFIX + 'products')) this.set('products', DEFAULT_PRODUCTS);
+      if (!localStorage.getItem(STORAGE_PREFIX + 'orders')) this.set('orders', DEFAULT_ORDERS);
+      if (!localStorage.getItem(STORAGE_PREFIX + 'promos')) this.set('promos', DEFAULT_PROMOS);
+      if (!localStorage.getItem(STORAGE_PREFIX + 'shipping')) this.set('shipping', DEFAULT_SHIPPING);
+      if (!localStorage.getItem(STORAGE_PREFIX + 'settings')) this.set('settings', DEFAULT_SETTINGS);
+      if (!localStorage.getItem(STORAGE_PREFIX + 'content')) this.set('content', DEFAULT_CONTENT);
+      if (!localStorage.getItem(STORAGE_PREFIX + 'sizeGuides')) this.set('sizeGuides', DEFAULT_SIZE_GUIDES);
+    }
 
-    if (window.location.protocol.startsWith('http')) {
-      this.syncWithBackend().then(() => {
-        // After pulling from server, push ALL local state back to server
-        // This ensures the server always has the merged/complete data
-        if (this.isOnline()) {
-          this.syncAllToCloud().catch(() => {});
-        }
-      });
+    if (isOnlineEnv) {
+      this.syncWithBackend();
     }
   },
 
   // ── Products ──
   getProducts() {
-    const list = this.get('products', DEFAULT_PRODUCTS);
+    const list = this.get('products', null);
+    if (list === null) {
+      return this.hasBackend ? [] : DEFAULT_PRODUCTS;
+    }
     if (Array.isArray(list) && list.some(p => p.sortOrder !== undefined)) {
       return [...list].sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
     }
-    return list;
+    return list || [];
   },
   async saveProduct(pData, editId) {
     let prods = this.getProducts();
