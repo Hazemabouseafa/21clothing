@@ -1,7 +1,7 @@
 {
-  "cairo": 50,
-  "alex": 65,
-  "delta": 70,
-  "upperEgypt": 85,
-  "freeThreshold": 2500
+  "alex": 150,
+  "cairo": 100,
+  "delta": 150,
+  "upperEgypt": 150,
+  "freeThreshold": 2000
 }

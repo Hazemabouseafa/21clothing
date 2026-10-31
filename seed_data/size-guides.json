@@ -1,0 +1,106 @@
+{
+  "top": {
+    "id": "top",
+    "name": "Hoodies & Shirts Size Guide (دليل مقاسات الهوديز والتيشرتات)",
+    "rows": [
+      {
+        "size": "S",
+        "chest": "58",
+        "length": "68",
+        "sleeve": "60",
+        "shoulders": "54"
+      },
+      {
+        "size": "M",
+        "chest": "61",
+        "length": "71",
+        "sleeve": "62",
+        "shoulders": "56"
+      },
+      {
+        "size": "L",
+        "chest": "64",
+        "length": "74",
+        "sleeve": "64",
+        "shoulders": "58"
+      },
+      {
+        "size": "XL",
+        "chest": "67",
+        "length": "76",
+        "sleeve": "65",
+        "shoulders": "60"
+      },
+      {
+        "size": "XXL",
+        "chest": "70",
+        "length": "78",
+        "sleeve": "66",
+        "shoulders": "62"
+      }
+    ],
+    "type": "shirt",
+    "unit": "cm",
+    "columns": [
+      "Size",
+      "Chest (العرض)",
+      "Length (الطول)",
+      "Shoulders (الأكتاف)",
+      "Sleeve (الكم)"
+    ],
+    "fitNotes": "Model is 182 cm (78 kg) wearing Large for an oversized streetwear look. Choose normal size for oversize, or size down for standard fit.",
+    "description": "Relaxed streetwear oversized fit. Measurements in Centimeters (cm)."
+  },
+  "bottom": {
+    "id": "bottom",
+    "name": "Pantalon & Sweatpants Size Guide (دليل مقاسات البنطلون)",
+    "rows": [
+      {
+        "size": "S",
+        "thigh": "62",
+        "waist": "72 - 78",
+        "length": "100",
+        "legOpening": "22"
+      },
+      {
+        "size": "M",
+        "thigh": "65",
+        "waist": "78 - 84",
+        "length": "103",
+        "legOpening": "23"
+      },
+      {
+        "size": "L",
+        "thigh": "68",
+        "waist": "84 - 90",
+        "length": "105",
+        "legOpening": "24"
+      },
+      {
+        "size": "XL",
+        "thigh": "71",
+        "waist": "90 - 96",
+        "length": "107",
+        "legOpening": "25"
+      },
+      {
+        "size": "XXL",
+        "thigh": "74",
+        "waist": "96 - 104",
+        "length": "109",
+        "legOpening": "26"
+      }
+    ],
+    "type": "pantalon",
+    "unit": "cm",
+    "columns": [
+      "Size",
+      "Waist (الوسط)",
+      "Length (الطول)",
+      "Thigh (الفخذ)",
+      "Leg Opening (فتحة الرجل)"
+    ],
+    "fitNotes": "Elastic waist band provides generous flex. Order based on your usual waist sizing.",
+    "description": "Straight leg relaxed cut with elastic waist drawstring. Measurements in Centimeters (cm)."
+  }
+}

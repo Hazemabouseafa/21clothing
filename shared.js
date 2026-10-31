@@ -281,6 +281,7 @@ const DEFAULT_CONTENT = {
 
 const StoreDB = {
   hasBackend: false,
+  memoryCache: {},
 
   getNeonUrl() {
     try {
@@ -322,23 +323,36 @@ const StoreDB = {
   },
 
   get(key, fallback) {
+    if (Object.prototype.hasOwnProperty.call(this.memoryCache, key) && this.memoryCache[key] !== undefined) {
+      return this.memoryCache[key];
+    }
     try {
       const v = localStorage.getItem(STORAGE_PREFIX + key);
-      return v ? JSON.parse(v) : fallback;
+      if (v) {
+        const parsed = JSON.parse(v);
+        this.memoryCache[key] = parsed;
+        return parsed;
+      }
+      return fallback;
     } catch(e) {
       return fallback;
     }
   },
 
   set(key, val) {
+    this.memoryCache[key] = val;
     try {
       localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(val));
+    } catch(e) {
+      // If product images exceed browser 5MB localStorage quota, keep authoritative data in memoryCache
+      // and clear stale localStorage entry so subsequent reads never serve outdated cache.
+      try { localStorage.removeItem(STORAGE_PREFIX + key); } catch (_) {}
+    }
+    try {
       if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
         window.dispatchEvent(new CustomEvent('storedb_change', { detail: { key, val } }));
       }
-    } catch(e) {
-      console.error(e);
-    }
+    } catch (e) {}
   },
 
   isOnline() {

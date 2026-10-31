@@ -1,9 +1,12 @@
 const url = require('url');
+const zlib = require('zlib');
 const {
   getStoreData,
   setStoreData,
   resetStoreData,
   syncAllToNeon,
+  exportAllStoreData,
+  migrateFromRemoteUrl,
   getDatabaseInfo,
   isNeonActive
 } = require('../lib/db');
@@ -11,45 +14,68 @@ const {
 function parseBody(req) {
   if (req.body && typeof req.body === 'object') return Promise.resolve(req.body);
   return new Promise((resolve) => {
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
+    const chunks = [];
+    req.on('data', chunk => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
     req.on('end', () => {
-      if (!body) return resolve({});
-      try { resolve(JSON.parse(body)); } catch (e) { resolve({}); }
+      if (!chunks.length) return resolve({});
+      try {
+        const raw = Buffer.concat(chunks).toString('utf8');
+        resolve(raw ? JSON.parse(raw) : {});
+      } catch (e) {
+        resolve({});
+      }
     });
     req.on('error', () => resolve({}));
   });
 }
 
-function sendJson(res, statusCode, data, req) {
-  const isCloud = isNeonActive(req);
-  res.writeHead(statusCode, {
+function sendJson(res, statusCode, data, req, extraHeaders = {}) {
+  const isPersistent = isNeonActive(req);
+  const jsonStr = JSON.stringify(data);
+  const acceptEncoding = (req && req.headers && req.headers['accept-encoding']) || '';
+
+  const headers = {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, x-database-url, x-db-url',
     'Access-Control-Expose-Headers': 'x-db-connected, x-db-type',
-    'x-db-connected': isCloud ? 'true' : 'false',
+    'x-db-connected': isPersistent ? 'true' : 'false',
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
     'Pragma': 'no-cache',
-    'Expires': '0'
-  });
-  res.end(JSON.stringify(data));
+    'Expires': '0',
+    ...extraHeaders
+  };
+
+  if (acceptEncoding.includes('gzip') && Buffer.byteLength(jsonStr) > 1024) {
+    zlib.gzip(Buffer.from(jsonStr, 'utf8'), (err, compressed) => {
+      if (!err && compressed) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+        res.writeHead(statusCode, headers);
+        res.end(compressed);
+      } else {
+        res.writeHead(statusCode, headers);
+        res.end(jsonStr);
+      }
+    });
+    return;
+  }
+
+  res.writeHead(statusCode, headers);
+  res.end(jsonStr);
 }
 
 module.exports = async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
-  
-  // When Vercel rewrites /api/(.*) -> /api/index.js:
-  // req.url or parsedUrl.pathname becomes '/api/index.js'.
-  // Vercel provides the original path via headers:
-  // 'x-matched-path', 'x-now-route-matches', 'x-invoke-path', or req.url
+
   let rawPath = req.headers['x-matched-path'] ||
                 req.headers['x-invoke-path'] ||
                 req.headers['x-forwarded-uri'] ||
                 parsedUrl.pathname;
 
-  // If rawPath is still '/api/index.js' or starts with '/api/index.js', check query params or fallback
   if (rawPath === '/api/index.js' || rawPath === '/api/index') {
     if (parsedUrl.query && parsedUrl.query._subpath) {
       rawPath = '/api/' + parsedUrl.query._subpath;
@@ -59,7 +85,7 @@ module.exports = async (req, res) => {
       try {
         const matches = new URLSearchParams(req.headers['x-now-route-matches']);
         if (matches.get('1')) rawPath = '/api/' + matches.get('1');
-      } catch(e) {}
+      } catch (e) {}
     }
   }
 
@@ -127,7 +153,7 @@ module.exports = async (req, res) => {
     if (prodMatch) {
       const id = Number(prodMatch[1]);
       let products = await getStoreData('products', undefined, req);
-      const idx = products.findIndex(p => p.id === id);
+      const idx = products.findIndex(p => Number(p.id) === id);
 
       if (idx === -1) return sendJson(res, 404, { error: 'Product not found' }, req);
 
@@ -164,11 +190,10 @@ module.exports = async (req, res) => {
         orders.unshift(newOrder);
         await setStoreData('orders', orders, req);
 
-        // Auto decrement stock
         if (newOrder.items && newOrder.items.length) {
           let products = await getStoreData('products', undefined, req);
           newOrder.items.forEach(item => {
-            const p = products.find(x => x.id === item.id);
+            const p = products.find(x => Number(x.id) === Number(item.id));
             if (p && p.sizes && p.sizes[item.size] !== undefined) {
               p.sizes[item.size] = Math.max(0, p.sizes[item.size] - item.qty);
             }
@@ -308,7 +333,7 @@ module.exports = async (req, res) => {
       }
     }
 
-    // ── /api/neon-sync (Bulk Cloud Synchronization) ──
+    // ── /api/neon-sync (Bulk Synchronization to Active DB) ──
     if (pathname === '/api/neon-sync' && method === 'POST') {
       const body = await parseBody(req);
       try {
@@ -319,24 +344,51 @@ module.exports = async (req, res) => {
       }
     }
 
+    // ── /api/backup (Full Database Snapshot Export / Import) ──
+    if (pathname === '/api/backup') {
+      if (method === 'GET') {
+        const snapshot = await exportAllStoreData(req);
+        const extra = parsedUrl.query && parsedUrl.query.download === '1'
+          ? { 'Content-Disposition': `attachment; filename="21clothing-backup-${new Date().toISOString().slice(0, 10)}.json"` }
+          : {};
+        return sendJson(res, 200, snapshot, req, extra);
+      }
+      if (method === 'POST') {
+        const body = await parseBody(req);
+        const result = await syncAllToNeon(body, req);
+        return sendJson(res, 200, result, req);
+      }
+    }
+
+    // ── /api/migrate-remote (Pull Latest Data from Live URL into Local VPS DB) ──
+    if (pathname === '/api/migrate-remote' && method === 'POST') {
+      const body = await parseBody(req);
+      try {
+        const result = await migrateFromRemoteUrl(body.sourceUrl || 'https://21clothingwear.com', req);
+        return sendJson(res, 200, result, req);
+      } catch (migErr) {
+        return sendJson(res, 400, { success: false, error: migErr.message }, req);
+      }
+    }
+
     // ── /api/reset ──
     if (pathname === '/api/reset' && method === 'POST') {
       await resetStoreData(req);
-      return sendJson(res, 200, { success: true, message: 'All store data reset to official defaults' }, req);
+      return sendJson(res, 200, { success: true, message: 'Store data restored to preserved production seed' }, req);
     }
 
-    // ── /api/status (Live Neon Database & System Diagnostics) ──
+    // ── /api/status & /api/health (Diagnostics & Coolify Healthcheck) ──
     if (pathname === '/api/status' || pathname === '/api/health') {
       const dbInfo = await getDatabaseInfo(req);
       const prods = await getStoreData('products', undefined, req);
       const orders = await getStoreData('orders', undefined, req);
       return sendJson(res, 200, {
         status: 'online',
-        service: '21 Clothing API (Vercel Serverless)',
+        service: process.env.VERCEL ? '21 Clothing API (Vercel Serverless)' : '21 Clothing Server (Coolify VPS)',
         database: dbInfo,
         stats: {
-          productsCount: prods.length,
-          ordersCount: orders.length
+          productsCount: Array.isArray(prods) ? prods.length : 0,
+          ordersCount: Array.isArray(orders) ? orders.length : 0
         },
         timestamp: new Date().toISOString()
       }, req);

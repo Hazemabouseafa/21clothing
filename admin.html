@@ -909,22 +909,46 @@
                 </div>
               </div>
 
-              <!-- Neon Cloud Action Buttons & Configuration Section -->
+              <!-- Database Action Buttons & Local VPS / Cloud Manager -->
               <div id="dbActionSection" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
-                <!-- When connected: Push Local Data to Neon button -->
+                <!-- Local VPS SQLite Active Section -->
+                <div id="dbLocalVpsActions" style="display: none; flex-direction: column; gap: 10px;">
+                  <span style="font-size: 0.8rem; color: #10b981;">
+                    ✦ قاعدة البيانات المحلية (SQLite + JSON) تعمل بشكل دائم على السيرفر! جميع المنتجات والصور والطلبات محفوظة محلياً وتظهر فوراً لجميع الزوار على الموبايل والكمبيوتر.
+                  </span>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="downloadFullDbBackup()" style="font-size: 0.75rem;">
+                      📥 تحميل نسخة احتياطية كاملة (.JSON)
+                    </button>
+                    <label class="btn btn-sm btn-secondary" style="font-size: 0.75rem; cursor: pointer; margin: 0;">
+                      📤 استرجاع نسخة احتياطية (.JSON)
+                      <input type="file" accept=".json,application/json" style="display:none;" onchange="uploadFullDbBackup(event)" />
+                    </label>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="pullLatestFromRemote()" style="font-size: 0.75rem;">
+                      🔄 سحب أحدث بيانات من الدومين القديم
+                    </button>
+                  </div>
+                </div>
+
+                <!-- When connected to Neon: Push Local Data to Neon button -->
                 <div id="dbConnectedActions" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                   <span style="font-size: 0.8rem; color: #10b981;">
                     ✦ متصل بقاعدة بيانات Neon السحابية! أي تعديل أو منتج جديد يظهر فوراً على الموبايل والكمبيوتر.
                   </span>
-                  <button type="button" class="btn btn-sm btn-primary" onclick="pushLocalDataToNeon()" id="btnPushToNeon" style="font-size: 0.75rem;">
-                    🚀 مزامنة كل البيانات المحلية إلى نيون السحابية
-                  </button>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="downloadFullDbBackup()" style="font-size: 0.75rem;">
+                      📥 تحميل نسخة احتياطية (.JSON)
+                    </button>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="pushLocalDataToNeon()" id="btnPushToNeon" style="font-size: 0.75rem;">
+                      🚀 مزامنة كل البيانات
+                    </button>
+                  </div>
                 </div>
 
-                <!-- When NOT connected: Direct input to connect + instructions -->
+                <!-- When NOT connected on serverless: Direct input to connect -->
                 <div id="dbNotConnectedActions" style="display: none;">
                   <p style="font-size: 0.8rem; color: #fbbf24; margin-bottom: 10px;">
-                    ⚠️ لوحة التحكم تعمل في <b>الوضع المحلي</b>. لربط قاعدة بيانات Neon السحابية ومزامنة المنتجات مع الموبايل:
+                    ⚠️ لوحة التحكم تعمل في وضع مؤقت بدون قاعدة بيانات متصلة:
                   </p>
                   <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
                     <input type="text" class="form-input" id="neonUrlInput" placeholder="رابط اتصال Neon: postgresql://user:pass@ep-xxxx.neon.tech/21clothing?sslmode=require" style="flex: 1; min-width: 260px; font-size: 0.78rem;" />
@@ -932,17 +956,6 @@
                       ⚡ ربط واختبار الآن
                     </button>
                   </div>
-                  <details style="font-size: 0.76rem; color: var(--text-dim); background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-                    <summary style="cursor: pointer; color: var(--accent); font-weight: 500;">📖 طريقة ربط Neon على Vercel بضغطة واحدة (دائم لجميع الزوار)</summary>
-                    <div style="margin-top: 8px; line-height: 1.6;">
-                      1. افتح مشروعك في <b>Vercel Dashboard</b><br/>
-                      2. ادخل على <b>Settings</b> ثم <b>Environment Variables</b><br/>
-                      3. أضف متغير جديد باسم: <code style="color:#60a5fa;">DATABASE_URL</code><br/>
-                      4. ضع فيه رابط اتصال نيون الخاص بك (مع <code style="color:#60a5fa;">?sslmode=require</code>)<br/>
-                      5. اضغط <b>Save</b> ثم اعمل <b>Redeploy</b> للمشروع.<br/>
-                      سيتم ربط قاعدة البيانات تلقائياً لجميع زوار المتجر على الموبايل والديسكتوب!
-                    </div>
-                  </details>
                 </div>
               </div>
             </div>
@@ -1281,7 +1294,7 @@
 
   <div class="admin-toast" id="adminToast">Action completed</div>
   <!-- Shared Data Script -->
-  <script src="shared.js?v=21.6"></script>
+  <script src="shared.js?v=22.0"></script>
 
   <!-- Admin Controller -->
   <script>
@@ -2389,19 +2402,21 @@
       showToast('Shipping rates updated');
     }
 
-    /* ── Settings (including Meta Pixel & Neon Status) ── */
+    /* ── Settings (including Meta Pixel, Local VPS SQLite & Neon Status) ── */
     async function checkDatabaseStatus(showNotification = false) {
       try {
         const res = await StoreDB.fetchApi('/api/status');
         if (res.ok) {
           const data = await res.json();
           const db = data.database || {};
-          const isNeon = Boolean(db.connected);
+          const isLocalVps = Boolean(db.isLocalDb && db.connected);
+          const isNeon = Boolean(!db.isLocalDb && db.connected);
           const title = document.getElementById('dbStatusTitle');
           const sub = document.getElementById('dbStatusSubtitle');
           const badge = document.getElementById('dbStatusBadge');
           const card = document.getElementById('dbStatusCard');
           const icon = document.getElementById('dbStatusIcon');
+          const localVpsActions = document.getElementById('dbLocalVpsActions');
           const connectedActions = document.getElementById('dbConnectedActions');
           const notConnectedActions = document.getElementById('dbNotConnectedActions');
           const neonInput = document.getElementById('neonUrlInput');
@@ -2410,7 +2425,29 @@
             neonInput.value = StoreDB.getNeonUrl();
           }
 
-          if (isNeon) {
+          if (isLocalVps) {
+            const pCount = data.stats?.productsCount ?? 0;
+            const oCount = data.stats?.ordersCount ?? 0;
+            if (title) title.textContent = currentLang === 'ar'
+              ? `قاعدة البيانات المحلية (SQLite VPS): متصلة ونشطة 🟢`
+              : `Local Persistent Database (SQLite VPS): Active 🟢`;
+            if (sub) sub.textContent = currentLang === 'ar'
+              ? `${db.type || 'SQLite + JSON'} — محفوظة محلياً على السيرفر (${pCount} منتجات • ${oCount} طلبات)`
+              : `${db.type || 'SQLite + JSON'} — Persistent on VPS (${pCount} products • ${oCount} orders)`;
+            if (badge) {
+              badge.textContent = 'Local VPS DB 🟢';
+              badge.className = 'status-pill delivered';
+            }
+            if (card) {
+              card.style.background = 'rgba(16, 185, 129, 0.08)';
+              card.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            }
+            if (icon) icon.textContent = '🗄️';
+            if (localVpsActions) localVpsActions.style.display = 'flex';
+            if (connectedActions) connectedActions.style.display = 'none';
+            if (notConnectedActions) notConnectedActions.style.display = 'none';
+            if (showNotification) showToast(currentLang === 'ar' ? 'متصل بقاعدة البيانات المحلية الدائمة على السيرفر' : 'Connected to Local Persistent VPS Database');
+          } else if (isNeon) {
             if (title) title.textContent = currentLang === 'ar' ? `قاعدة بيانات نيون (Neon): متصلة بنجاح ⚡` : `Neon Postgres: Connected ⚡`;
             if (sub) sub.textContent = currentLang === 'ar' ? `قاعدة البيانات: ${db.name || '21clothing'} — متصل سحابياً مع Vercel (${data.stats?.productsCount || 0} منتجات)` : `Database: ${db.name || '21clothing'} on ${db.host || 'neon.tech'} (${data.stats?.productsCount || 0} products)`;
             if (badge) {
@@ -2422,14 +2459,15 @@
               card.style.borderColor = 'rgba(16, 185, 129, 0.3)';
             }
             if (icon) icon.textContent = '⚡';
+            if (localVpsActions) localVpsActions.style.display = 'none';
             if (connectedActions) connectedActions.style.display = 'flex';
             if (notConnectedActions) notConnectedActions.style.display = 'none';
             if (showNotification) showToast(currentLang === 'ar' ? 'متصل بقاعدة بيانات Neon السحابية' : 'Connected to Neon Serverless Postgres');
           } else {
-            if (title) title.textContent = currentLang === 'ar' ? 'وضع التخزين المحلي (Local Storage)' : 'Local Storage Mode';
-            if (sub) sub.textContent = currentLang === 'ar' ? (db.error ? `خطأ في الاتصال: ${db.error}` : 'لربط قاعدة بيانات Neon السحابية ومزامنة الموبايل، أدخل الرابط أدناه أو أضف DATABASE_URL في Vercel') : (db.error ? `Error: ${db.error}` : 'To enable cloud database, configure DATABASE_URL in Vercel or input below');
+            if (title) title.textContent = currentLang === 'ar' ? 'وضع التخزين المؤقت (Serverless Fallback)' : 'Temporary Storage Mode';
+            if (sub) sub.textContent = currentLang === 'ar' ? (db.error ? `خطأ في الاتصال: ${db.error}` : 'لربط قاعدة بيانات Neon السحابية ومزامنة الموبايل، أدخل الرابط أدناه أو أضف DATABASE_URL') : (db.error ? `Error: ${db.error}` : 'To enable cloud database, configure DATABASE_URL or input below');
             if (badge) {
-              badge.textContent = 'Local 🟠';
+              badge.textContent = 'Temp 🟠';
               badge.className = 'status-pill pending';
             }
             if (card) {
@@ -2437,13 +2475,103 @@
               card.style.borderColor = 'rgba(234, 179, 8, 0.3)';
             }
             if (icon) icon.textContent = '💾';
+            if (localVpsActions) localVpsActions.style.display = 'none';
             if (connectedActions) connectedActions.style.display = 'none';
             if (notConnectedActions) notConnectedActions.style.display = 'block';
-            if (showNotification) showToast(currentLang === 'ar' ? 'يعمل في وضع التخزين المحلي' : 'Running in local storage mode');
+            if (showNotification) showToast(currentLang === 'ar' ? 'يعمل في وضع التخزين المؤقت' : 'Running in temporary storage mode');
           }
         }
       } catch (e) {
         console.error('Database status error:', e);
+      }
+    }
+
+    async function downloadFullDbBackup() {
+      try {
+        showToast(currentLang === 'ar' ? 'جاري تجهيز النسخة الاحتياطية الكاملة...' : 'Preparing full database backup...');
+        const res = await StoreDB.fetchApi('/api/backup');
+        let jsonStr = '';
+        if (res.ok) {
+          const snapshot = await res.json();
+          jsonStr = JSON.stringify(snapshot, null, 2);
+        } else {
+          jsonStr = StoreDB.exportBackupData();
+        }
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `21clothing-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(currentLang === 'ar' ? '✅ تم تحميل النسخة الاحتياطية بنجاح!' : '✅ Full backup downloaded!');
+      } catch (e) {
+        showToast('Backup error: ' + e.message);
+      }
+    }
+
+    async function uploadFullDbBackup(event) {
+      const file = event.target && event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        showToast(currentLang === 'ar' ? 'جاري استرجاع النسخة الاحتياطية إلى قاعدة البيانات...' : 'Restoring backup to database...');
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const payload = parsed.data && parsed.data.products ? parsed.data : parsed;
+        const res = await StoreDB.fetchApi('/api/backup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const out = await res.json();
+        if (res.ok && out.success) {
+          await StoreDB.syncWithBackend();
+          await checkDatabaseStatus(false);
+          renderAll();
+          showToast(currentLang === 'ar' ? '✅ تم استرجاع كل المنتجات والطلبات بنجاح!' : '✅ All products & orders restored!');
+        } else {
+          showToast('Restore failed: ' + (out.error || 'Unknown error'));
+        }
+      } catch (e) {
+        showToast('Invalid backup file: ' + e.message);
+      } finally {
+        event.target.value = '';
+      }
+    }
+
+    async function pullLatestFromRemote() {
+      const defaultUrl = 'https://21clothingwear.com';
+      const sourceUrl = prompt(
+        currentLang === 'ar'
+          ? 'أدخل رابط الموقع القديم لسحب أحدث المنتجات والطلبات منه بدون أي فقدان للبيانات:'
+          : 'Enter the live store URL to pull all latest products, images, and orders from:',
+        defaultUrl
+      );
+      if (!sourceUrl || !sourceUrl.trim()) return;
+      try {
+        showToast(currentLang === 'ar' ? 'جاري سحب كل البيانات والصور من السيرفر القديم...' : 'Pulling live products & orders from remote URL...');
+        const res = await StoreDB.fetchApi('/api/migrate-remote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceUrl: sourceUrl.trim() })
+        });
+        const out = await res.json();
+        if (res.ok && out.success) {
+          await StoreDB.syncWithBackend();
+          await checkDatabaseStatus(false);
+          renderAll();
+          showToast(
+            currentLang === 'ar'
+              ? `✅ تم استيراد ${out.productsImported || 0} منتجات و ${out.ordersImported || 0} طلبات بنجاح!`
+              : `✅ Pulled ${out.productsImported || 0} products & ${out.ordersImported || 0} orders!`
+          );
+        } else {
+          showToast('Migration failed: ' + (out.error || 'Check URL'));
+        }
+      } catch (e) {
+        showToast('Migration error: ' + e.message);
       }
     }
 
