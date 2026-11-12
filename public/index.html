@@ -289,7 +289,8 @@
       <span class="nav-logo-text">21</span>
     </a>
     <ul class="nav-links">
-      <li><a href="#collection">Drop 001</a></li>
+      <li><a href="#collection">Hoodies</a></li>
+      <li><a href="#sweatpants">Sweatpants</a></li>
       <li><a href="javascript:void(0)" onclick="openStoreSizeGuide('top')">Size Guide</a></li>
       <li><a href="#story">Brand Story</a></li>
       <li><a href="#contact">Contact</a></li>
@@ -363,6 +364,25 @@
     </div>
   </section>
 
+  <!-- Sweatpants Collection Section -->
+  <section id="sweatpants" style="border-top: 1px solid var(--border);">
+    <div class="collection-header">
+      <div class="reveal-on-scroll" style="--stagger: 0;">
+        <p class="section-eyebrow" id="sweatpantsEyebrow">Bottoms Collection</p>
+        <h2 class="section-title" id="sweatpantsTitle">Drop 001<br/>The Sweatpants</h2>
+      </div>
+      <div class="collection-filters reveal-on-scroll" style="--stagger: 1;">
+        <button class="filter-btn active" data-filter="all">All Sweatpants</button>
+        <button class="filter-btn" data-filter="Baggy">Baggy</button>
+        <button class="filter-btn" data-filter="Straight">Straight</button>
+        <button class="filter-btn" data-filter="Heavy">Heavyweight</button>
+      </div>
+    </div>
+    <div class="product-grid" id="sweatpantsGrid">
+      <!-- Generated dynamically from StoreDB -->
+    </div>
+  </section>
+
   <!-- Story Section -->
   <section class="story-section" id="story">
     <div class="story-big-number reveal-on-scroll" style="--stagger: 0;">21</div>
@@ -394,7 +414,8 @@
       <div class="reveal-on-scroll" style="--stagger: 1;">
         <p class="footer-col-header">Shop</p>
         <ul class="footer-link-list">
-          <li><a href="#collection">Drop 001</a></li>
+          <li><a href="#collection">Hoodies</a></li>
+          <li><a href="#sweatpants">Sweatpants</a></li>
           <li><a href="#story">Story</a></li>
           <li><a href="javascript:void(0)" onclick="openStoreSizeGuide('top')">Size Guide</a></li>
         </ul>
@@ -528,13 +549,50 @@
       </div>
 
       <!-- Size Guide Tabs (Top vs Bottom) -->
-      <div style="display: flex; gap: 10px; margin-bottom: 22px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+      <div style="display: flex; gap: 10px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 14px; flex-wrap: wrap;">
         <button type="button" class="filter-btn active" id="btnTabGuideTop" onclick="switchStoreSizeGuideTab('top')">
           <span>👕</span> <span>Hoodies & Tops (الهودي والتيشرت)</span>
         </button>
         <button type="button" class="filter-btn" id="btnTabGuideBottom" onclick="switchStoreSizeGuideTab('bottom')">
-          <span>👖</span> <span>Pants & Bottoms (البنطلون)</span>
+          <span>👖</span> <span>Sweatpants & Bottoms (السويت بانتس)</span>
         </button>
+      </div>
+
+      <!-- Smart Size Calculator (Hoodie vs Sweatpants Formula) -->
+      <div style="background: rgba(232, 227, 216, 0.04); border: 1px solid rgba(232, 227, 216, 0.18); border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+          <span style="font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600;" id="storeCalcTitle">
+            ⚡ Smart Size Calculator (احسب مقاسك)
+          </span>
+          <span style="font-size: 0.7rem; color: var(--muted);" id="storeCalcModeHint">Top / Oversized Formula</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 8px; align-items: end;">
+          <div id="storeCalcWaistWrap" style="display: none;">
+            <label for="storeCalcWaist" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Waist (الوسط سم - اختياري)</label>
+            <input type="number" id="storeCalcWaist" class="field-input" placeholder="e.g. 84" min="55" max="135" oninput="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;" />
+          </div>
+          <div>
+            <label for="storeCalcHeight" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Height (الطول سم)</label>
+            <input type="number" id="storeCalcHeight" class="field-input" value="178" min="140" max="215" oninput="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;" />
+          </div>
+          <div>
+            <label for="storeCalcWeight" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Weight (الوزن كجم)</label>
+            <input type="number" id="storeCalcWeight" class="field-input" value="76" min="40" max="160" oninput="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;" />
+          </div>
+          <div>
+            <label for="storeCalcFit" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Fit (تفضيل القصة)</label>
+            <select id="storeCalcFit" class="field-select" onchange="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;">
+              <option value="relaxed">Relaxed / Standard</option>
+              <option value="baggy">Extra Baggy (واسع)</option>
+              <option value="fitted">Fitted (مظبوط)</option>
+            </select>
+          </div>
+          <div style="background: rgba(232,227,216,0.12); border: 1px solid rgba(232,227,216,0.3); border-radius: 6px; padding: 7px 10px; text-align: center;">
+            <span style="font-size: 0.62rem; text-transform: uppercase; color: var(--muted); display: block;">Your Size</span>
+            <strong style="font-size: 1.05rem; color: var(--accent);" id="storeCalcResultSize">L</strong>
+          </div>
+        </div>
+        <p style="font-size: 0.75rem; color: #ddd; margin-top: 8px; line-height: 1.5;" id="storeCalcReason"></p>
       </div>
 
       <!-- Measurement Table Box -->
@@ -755,6 +813,11 @@
       if (cnt.collectionEyebrow) document.getElementById('collEyebrow').textContent = cnt.collectionEyebrow;
       if (cnt.collectionTitle) document.getElementById('collTitle').innerHTML = escapeHtml(cnt.collectionTitle).replace(/\n/g, '<br/>');
 
+      const spEyebrow = document.getElementById('sweatpantsEyebrow');
+      const spTitle = document.getElementById('sweatpantsTitle');
+      if (spEyebrow) spEyebrow.textContent = cnt.sweatpantsEyebrow || 'Bottoms Collection';
+      if (spTitle) spTitle.innerHTML = escapeHtml(cnt.sweatpantsTitle || 'Drop 001\nThe Sweatpants').replace(/\n/g, '<br/>');
+
       if (cnt.storyEyebrow) document.getElementById('storyEyebrow').textContent = cnt.storyEyebrow;
       if (cnt.storyTitle) document.getElementById('storyHeading').innerHTML = escapeHtml(cnt.storyTitle).replace(/\n/g, '<br/>');
       if (cnt.storyParagraph1) document.getElementById('storyP1').textContent = cnt.storyParagraph1;
@@ -851,108 +914,122 @@
       setTimeout(() => t.classList.remove('show'), 2200);
     }
 
-    /* ── Render Products ── */
+    /* ── Render Products (Hoodies & Sweatpants) ── */
     let currentCategoryFilter = 'all';
+    let currentSweatpantsFilter = 'all';
 
-    function renderStorefrontProducts() {
-      const grid = document.getElementById('productGrid');
-      const products = StoreDB.getProducts().filter(p => p.active !== false);
+    function buildProductCardHtml(p, idx) {
+      const cat = StoreDB.getProductCategory(p);
+      const availableSizes = StoreDB.getProductSizeKeys(p);
+      const defaultSize = availableSizes.find(sz => p.sizes && p.sizes[sz] > 0) || availableSizes[0] || 'L';
+      const guideType = p.sizeGuideType || (cat === 'sweatpants' ? 'bottom' : 'top');
+      const variants = (p.colorVariants && p.colorVariants.length) ? p.colorVariants : [
+        { colorName: p.colorTheme || 'Midnight Black', colorHex: (p.colors && p.colors[0]) || p.svgFill || '#1c1c1c', images: p.image ? [p.image] : [] }
+      ];
+      const activeVariant = variants[0];
+      const hasImages = activeVariant.images && activeVariant.images.length > 0;
+      const color = activeVariant.colorHex || p.svgFill || '#1c1c1c';
+      const accent = p.accent || '#444';
 
-      const filtered = currentCategoryFilter === 'all' 
-        ? products 
-        : products.filter(p => (p.name + ' ' + (p.fit || '')).toLowerCase().includes(currentCategoryFilter.toLowerCase()));
+      return `
+        <div class="product-card" data-pid="${p.id}" data-category="${cat}" data-active-variant="0" style="--card-idx:${idx % 6};">
+          <div class="product-visual-wrap ${hasImages ? 'has-real-image' : ''}" id="cardVisual_${p.id}" onclick="navigateToProduct(event, ${p.id})" style="cursor:pointer;" title="View ${escapeHtml(p.name)}">
+            ${p.badge ? `<span class="product-badge-tag">${p.badge}</span>` : ''}
+            <div id="cardMediaBox_${p.id}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative;">
+              ${hasImages ? `
+                <img src="${activeVariant.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" loading="lazy" />
+                ${activeVariant.images.length > 1 ? `
+                  <img src="${activeVariant.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" loading="lazy" />
+                  <span class="image-count-tag" id="cardImgCount_${p.id}">✦ ${activeVariant.images.length} Photos</span>
+                ` : ''}
+              ` : StoreDB.generateGarmentSvg(cat, color, accent)}
+            </div>
+          </div>
+          <div class="product-info-box">
+            <div class="product-meta-row">
+              <h3 class="product-title" style="cursor:pointer;" onclick="navigateToProduct(event, ${p.id})" title="View ${escapeHtml(p.name)}">${escapeHtml(p.name)}</h3>
+              <div class="product-pricing">
+                <span class="product-price">${p.price.toLocaleString()} EGP</span>
+                ${p.originalPrice ? `<span class="product-original-price">${p.originalPrice.toLocaleString()} EGP</span>` : ''}
+              </div>
+            </div>
+            <p class="product-fit-label">${escapeHtml(p.fit || (cat === 'sweatpants' ? '450 GSM Heavyweight Sweatpants' : '450 GSM French Terry'))}</p>
+            
+            <!-- Color Selector -->
+            <div class="color-selector-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <div style="display:flex; gap:6px; align-items:center;">
+                <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase;">Color:</span>
+                <span class="active-color-title" id="cardColorTitle_${p.id}" style="font-size:0.75rem; color:var(--white); font-weight:500;">
+                  ${escapeHtml(activeVariant.colorName)}
+                </span>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center;">
+                ${variants.map((v, vIdx) => `
+                  <button type="button" class="color-swatch-dot ${vIdx === 0 ? 'active' : ''}" 
+                          data-vidx="${vIdx}"
+                          style="background:${v.colorHex}; width:16px; height:16px; border-radius:50%; border:2px solid ${vIdx === 0 ? '#fff' : 'transparent'}; cursor:pointer; outline:1px solid rgba(255,255,255,0.25);" 
+                          title="${escapeHtml(v.colorName)}" 
+                          onclick="selectProductColor(${p.id}, ${vIdx})">
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Size Selector & Size Guide Modal Trigger -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase;">Size:</span>
+              ${p.sizeGuideType !== 'none' ? `
+                <button type="button" onclick="openStoreSizeGuide('${guideType}', '${escapeHtml(p.name)}')" style="background:none; border:none; color:var(--accent); font-size:0.7rem; cursor:pointer; text-decoration:underline; text-underline-offset:3px; display:inline-flex; align-items:center; gap:4px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
+                  <span>📏</span> <span>${cat === 'sweatpants' ? 'Sweatpants Size Guide' : 'Size Guide'}</span>
+                </button>
+              ` : ''}
+            </div>
+            <div class="size-selector-row">
+              ${availableSizes.map(sz => {
+                const inStock = p.sizes ? (p.sizes[sz] > 0) : true;
+                const isSelected = sz === defaultSize;
+                return `
+                  <button type="button" class="size-pill ${isSelected ? 'selected' : ''} ${!inStock ? 'disabled' : ''}" data-size="${escapeHtml(sz)}" ${!inStock ? 'disabled title="Out of Stock"' : ''}>
+                    ${escapeHtml(sz)}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="card-actions-row" style="display:flex; gap:8px;">
+              <button type="button" class="add-bag-btn" onclick="addToBagFromCard(${p.id}, this)" style="flex:1;">Add to Bag</button>
+              <a href="product.html?id=${p.id}" onclick="navigateToProduct(event, ${p.id})" class="view-product-link" title="View Details" style="display:inline-flex; align-items:center; justify-content:center; padding:12px 14px; background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--white); text-decoration:none; font-size:0.75rem; border-radius:2px; transition:all 0.25s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='var(--white)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--border)'">
+                <span style="letter-spacing:0.1em; font-size:0.68rem; text-transform:uppercase;">View ↗</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCategoryGrid(gridId, category, filterValue) {
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+
+      const products = StoreDB.getProducts().filter(p => p.active !== false && StoreDB.getProductCategory(p) === category);
+      const filtered = filterValue === 'all'
+        ? products
+        : products.filter(p => (p.name + ' ' + (p.fit || '') + ' ' + (p.badge || '')).toLowerCase().includes(filterValue.toLowerCase()));
 
       if (!filtered.length) {
-        grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:var(--muted); padding:40px;">No pieces matching this collection.</p>';
+        const emptyText = category === 'sweatpants'
+          ? 'Sweatpants Drop arriving soon — add pieces from Admin Console.'
+          : 'No pieces matching this collection.';
+        grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--muted); padding:40px; border:1px dashed var(--border); border-radius:8px;">${emptyText}</p>`;
         return;
       }
 
-      grid.innerHTML = filtered.map((p, idx) => {
-        const availableSizes = p.sizes ? Object.keys(p.sizes) : ['S', 'M', 'L', 'XL', 'XXL'];
-        const defaultSize = availableSizes.find(sz => p.sizes && p.sizes[sz] > 0) || 'L';
-        const variants = (p.colorVariants && p.colorVariants.length) ? p.colorVariants : [
-          { colorName: p.colorTheme || 'Midnight Black', colorHex: (p.colors && p.colors[0]) || p.svgFill || '#1c1c1c', images: p.image ? [p.image] : [] }
-        ];
-        const activeVariant = variants[0];
-        const hasImages = activeVariant.images && activeVariant.images.length > 0;
-        const color = activeVariant.colorHex || p.svgFill || '#1c1c1c';
-        const accent = p.accent || '#444';
+      grid.innerHTML = filtered.map((p, idx) => buildProductCardHtml(p, idx)).join('');
+    }
 
-        return `
-          <div class="product-card" data-pid="${p.id}" data-active-variant="0" style="--card-idx:${idx % 6};">
-            <div class="product-visual-wrap ${hasImages ? 'has-real-image' : ''}" id="cardVisual_${p.id}" onclick="navigateToProduct(event, ${p.id})" style="cursor:pointer;" title="View ${escapeHtml(p.name)}">
-              ${p.badge ? `<span class="product-badge-tag">${p.badge}</span>` : ''}
-              <div id="cardMediaBox_${p.id}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative;">
-                ${hasImages ? `
-                  <img src="${activeVariant.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" loading="lazy" />
-                  ${activeVariant.images.length > 1 ? `
-                    <img src="${activeVariant.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" loading="lazy" />
-                    <span class="image-count-tag" id="cardImgCount_${p.id}">✦ ${activeVariant.images.length} Photos</span>
-                  ` : ''}
-                ` : generateHoodieSvg(color, accent)}
-              </div>
-            </div>
-            <div class="product-info-box">
-              <div class="product-meta-row">
-                <h3 class="product-title" style="cursor:pointer;" onclick="navigateToProduct(event, ${p.id})" title="View ${escapeHtml(p.name)}">${escapeHtml(p.name)}</h3>
-                <div class="product-pricing">
-                  <span class="product-price">${p.price.toLocaleString()} EGP</span>
-                  ${p.originalPrice ? `<span class="product-original-price">${p.originalPrice.toLocaleString()} EGP</span>` : ''}
-                </div>
-              </div>
-              <p class="product-fit-label">${escapeHtml(p.fit || '450 GSM French Terry')}</p>
-              
-              <!-- Color Selector -->
-              <div class="color-selector-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <div style="display:flex; gap:6px; align-items:center;">
-                  <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase;">Color:</span>
-                  <span class="active-color-title" id="cardColorTitle_${p.id}" style="font-size:0.75rem; color:var(--white); font-weight:500;">
-                    ${escapeHtml(activeVariant.colorName)}
-                  </span>
-                </div>
-                <div style="display:flex; gap:6px; align-items:center;">
-                  ${variants.map((v, vIdx) => `
-                    <button type="button" class="color-swatch-dot ${vIdx === 0 ? 'active' : ''}" 
-                            data-vidx="${vIdx}"
-                            style="background:${v.colorHex}; width:16px; height:16px; border-radius:50%; border:2px solid ${vIdx === 0 ? '#fff' : 'transparent'}; cursor:pointer; outline:1px solid rgba(255,255,255,0.25);" 
-                            title="${escapeHtml(v.colorName)}" 
-                            onclick="selectProductColor(${p.id}, ${vIdx})">
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-
-              <!-- Size Selector & Size Guide Modal Trigger -->
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <span style="font-size:0.68rem; color:var(--muted); text-transform:uppercase;">Size:</span>
-                ${p.sizeGuideType !== 'none' ? `
-                  <button type="button" onclick="openStoreSizeGuide('${p.sizeGuideType || 'top'}', '${escapeHtml(p.name)}')" style="background:none; border:none; color:var(--accent); font-size:0.7rem; cursor:pointer; text-decoration:underline; text-underline-offset:3px; display:inline-flex; align-items:center; gap:4px; opacity:0.85; transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
-                    <span>📏</span> <span>Size Guide</span>
-                  </button>
-                ` : ''}
-              </div>
-              <div class="size-selector-row">
-                ${['S', 'M', 'L', 'XL', 'XXL'].map(sz => {
-                  const inStock = p.sizes ? (p.sizes[sz] > 0) : true;
-                  const isSelected = sz === defaultSize;
-                  return `
-                    <button type="button" class="size-pill ${isSelected ? 'selected' : ''} ${!inStock ? 'disabled' : ''}" data-size="${sz}" ${!inStock ? 'disabled title="Out of Stock"' : ''}>
-                      ${sz}
-                    </button>
-                  `;
-                }).join('')}
-              </div>
-
-              <div class="card-actions-row" style="display:flex; gap:8px;">
-                <button type="button" class="add-bag-btn" onclick="addToBagFromCard(${p.id}, this)" style="flex:1;">Add to Bag</button>
-                <a href="product.html?id=${p.id}" onclick="navigateToProduct(event, ${p.id})" class="view-product-link" title="View Details" style="display:inline-flex; align-items:center; justify-content:center; padding:12px 14px; background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--white); text-decoration:none; font-size:0.75rem; border-radius:2px; transition:all 0.25s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.borderColor='var(--white)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='var(--border)'">
-                  <span style="letter-spacing:0.1em; font-size:0.68rem; text-transform:uppercase;">View ↗</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+    function renderStorefrontProducts() {
+      renderCategoryGrid('productGrid', 'hoodies', currentCategoryFilter);
+      renderCategoryGrid('sweatpantsGrid', 'sweatpants', currentSweatpantsFilter);
 
       document.querySelectorAll('.product-card').forEach(card => {
         const pills = card.querySelectorAll('.size-pill:not(.disabled)');
@@ -1036,7 +1113,7 @@
           ` : ''}
         `;
       } else {
-        mediaBox.innerHTML = generateHoodieSvg(v.colorHex || p.svgFill || '#1c1c1c', p.accent || '#444');
+        mediaBox.innerHTML = StoreDB.generateGarmentSvg(StoreDB.getProductCategory(p), v.colorHex || p.svgFill || '#1c1c1c', p.accent || '#444');
       }
 
       requestAnimationFrame(() => {
@@ -1094,7 +1171,8 @@
 
       const card = document.querySelector(`.product-card[data-pid="${pid}"]`);
       const selectedPill = card.querySelector('.size-pill.selected');
-      const size = selectedPill ? selectedPill.dataset.size : 'L';
+      const fallbackSizes = StoreDB.getProductSizeKeys(p);
+      const size = selectedPill ? selectedPill.dataset.size : (fallbackSizes[0] || 'L');
 
       const vIdx = Number(card.dataset.activeVariant || 0);
       const variants = (p.colorVariants && p.colorVariants.length) ? p.colorVariants : [
@@ -1109,6 +1187,7 @@
       } else {
         cart.push({
           id: p.id,
+          category: StoreDB.getProductCategory(p),
           name: p.name,
           price: p.price,
           size: size,
@@ -1383,6 +1462,31 @@
       renderStoreSizeGuideContent();
     }
 
+    function updateStoreSizeCalculator() {
+      const isBottom = currentStoreSizeGuideTab === 'bottom';
+      const waistWrap = document.getElementById('storeCalcWaistWrap');
+      const modeHint = document.getElementById('storeCalcModeHint');
+      const resultEl = document.getElementById('storeCalcResultSize');
+      const reasonEl = document.getElementById('storeCalcReason');
+      if (waistWrap) waistWrap.style.display = isBottom ? 'block' : 'none';
+      if (modeHint) modeHint.textContent = isBottom ? 'Sweatpants: Waist & Length Formula (حاسبة السويت بانتس)' : 'Hoodies: Height & Weight Chest Formula';
+
+      const calc = StoreDB.calculateRecommendedSize(isBottom ? 'bottom' : 'top', {
+        waistCm: document.getElementById('storeCalcWaist') ? document.getElementById('storeCalcWaist').value : '',
+        heightCm: document.getElementById('storeCalcHeight') ? document.getElementById('storeCalcHeight').value : 178,
+        weightKg: document.getElementById('storeCalcWeight') ? document.getElementById('storeCalcWeight').value : 76,
+        fitPref: document.getElementById('storeCalcFit') ? document.getElementById('storeCalcFit').value : 'relaxed'
+      });
+
+      if (resultEl) resultEl.textContent = calc.recommendedSize;
+      if (reasonEl) reasonEl.textContent = calc.reasonAr;
+
+      document.querySelectorAll('#storeSizeGuideTable tbody tr').forEach(tr => {
+        const isMatch = tr.dataset.rowSize && tr.dataset.rowSize === calc.recommendedSize;
+        tr.style.background = isMatch ? 'rgba(232, 227, 216, 0.12)' : '';
+      });
+    }
+
     function renderStoreSizeGuideContent() {
       const guides = StoreDB.getSizeGuides() || DEFAULT_SIZE_GUIDES;
       const guide = guides[currentStoreSizeGuideTab] || DEFAULT_SIZE_GUIDES[currentStoreSizeGuideTab];
@@ -1402,7 +1506,7 @@
         </thead>
         <tbody>
           ${rows.map(r => `
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <tr data-row-size="${escapeHtml(r.size)}" style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;">
               <td style="padding: 12px 14px; font-weight: 700; color: #fff;">${r.size}</td>
               ${currentStoreSizeGuideTab === 'top' ? `
                 <td style="padding: 12px 14px; color: var(--muted);">${r.chest || '-'} cm</td>
@@ -1424,24 +1528,34 @@
       if (notes) {
         notes.textContent = guide.fitNotes || 'Relaxed streetwear fit. Select your standard size.';
       }
+      updateStoreSizeCalculator();
     }
 
     /* ── Filter Buttons (with View Transition API support) ── */
-    document.querySelectorAll('#collection .filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#collection .filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentCategoryFilter = btn.dataset.filter;
-        const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (document.startViewTransition && !prefersReduced) {
-          document.startViewTransition(() => {
-            renderStorefrontProducts();
-          });
-        } else {
-          renderStorefrontProducts();
-        }
-        trackMetaEvent('ViewContent', { content_category: currentCategoryFilter });
+    function bindSectionFilters(selector, onSelect) {
+      document.querySelectorAll(selector).forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filterVal = btn.dataset.filter;
+          const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (document.startViewTransition && !prefersReduced) {
+            document.startViewTransition(() => onSelect(filterVal));
+          } else {
+            onSelect(filterVal);
+          }
+          trackMetaEvent('ViewContent', { content_category: filterVal });
+        });
       });
+    }
+
+    bindSectionFilters('#collection .filter-btn', val => {
+      currentCategoryFilter = val;
+      renderStorefrontProducts();
+    });
+    bindSectionFilters('#sweatpants .filter-btn', val => {
+      currentSweatpantsFilter = val;
+      renderStorefrontProducts();
     });
 
     function escapeHtml(str) {

@@ -301,7 +301,7 @@
     <div class="breadcrumb-row">
       <a href="index.html">Home</a>
       <span class="breadcrumb-separator">/</span>
-      <a href="index.html#collection">Drop 001</a>
+      <a href="index.html#collection" id="breadcrumbCategoryLink">Hoodies</a>
       <span class="breadcrumb-separator">/</span>
       <span id="breadcrumbCurrentName" style="color:var(--white);">Loading Piece...</span>
     </div>
@@ -507,13 +507,50 @@
         <button type="button" class="drawer-close-btn" onclick="closeStoreSizeGuide()">&times;</button>
       </div>
 
-      <div style="display: flex; gap: 10px; margin-bottom: 22px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+      <div style="display: flex; gap: 10px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 14px; flex-wrap: wrap;">
         <button type="button" class="filter-btn active" id="btnTabGuideTop" onclick="switchStoreSizeGuideTab('top')">
           <span>👕</span> <span>Hoodies & Tops (الهودي والتيشرت)</span>
         </button>
         <button type="button" class="filter-btn" id="btnTabGuideBottom" onclick="switchStoreSizeGuideTab('bottom')">
-          <span>👖</span> <span>Pants & Bottoms (البنطلون)</span>
+          <span>👖</span> <span>Sweatpants & Bottoms (السويت بانتس)</span>
         </button>
+      </div>
+
+      <!-- Smart Size Calculator -->
+      <div style="background: rgba(232, 227, 216, 0.04); border: 1px solid rgba(232, 227, 216, 0.18); border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+          <span style="font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600;">
+            ⚡ Smart Size Calculator (احسب مقاسك)
+          </span>
+          <span style="font-size: 0.7rem; color: var(--muted);" id="storeCalcModeHint">Top / Oversized Formula</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 8px; align-items: end;">
+          <div id="storeCalcWaistWrap" style="display: none;">
+            <label for="storeCalcWaist" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Waist (الوسط سم - اختياري)</label>
+            <input type="number" id="storeCalcWaist" class="field-input" placeholder="e.g. 84" min="55" max="135" oninput="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;" />
+          </div>
+          <div>
+            <label for="storeCalcHeight" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Height (الطول سم)</label>
+            <input type="number" id="storeCalcHeight" class="field-input" value="178" min="140" max="215" oninput="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;" />
+          </div>
+          <div>
+            <label for="storeCalcWeight" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Weight (الوزن كجم)</label>
+            <input type="number" id="storeCalcWeight" class="field-input" value="76" min="40" max="160" oninput="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;" />
+          </div>
+          <div>
+            <label for="storeCalcFit" style="font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 4px;">Fit (تفضيل القصة)</label>
+            <select id="storeCalcFit" class="field-select" onchange="updateStoreSizeCalculator()" style="margin-bottom: 0; padding: 8px 10px; font-size: 0.82rem;">
+              <option value="relaxed">Relaxed / Standard</option>
+              <option value="baggy">Extra Baggy (واسع)</option>
+              <option value="fitted">Fitted (مظبوط)</option>
+            </select>
+          </div>
+          <div style="background: rgba(232,227,216,0.12); border: 1px solid rgba(232,227,216,0.3); border-radius: 6px; padding: 7px 10px; text-align: center;">
+            <span style="font-size: 0.62rem; text-transform: uppercase; color: var(--muted); display: block;">Your Size</span>
+            <strong style="font-size: 1.05rem; color: var(--accent);" id="storeCalcResultSize">L</strong>
+          </div>
+        </div>
+        <p style="font-size: 0.75rem; color: #ddd; margin-top: 8px; line-height: 1.5;" id="storeCalcReason"></p>
       </div>
 
       <div style="overflow-x: auto; margin-bottom: 22px; border: 1px solid var(--border); border-radius: 8px; background: #09090b;">
@@ -763,6 +800,19 @@
 
       currentProduct = (pid ? allProducts.find(p => String(p.id) === String(pid)) : null) || allProducts[0];
 
+      const pCat = StoreDB.getProductCategory(currentProduct);
+      const bcLink = document.getElementById('breadcrumbCategoryLink');
+      if (bcLink) {
+        bcLink.href = pCat === 'sweatpants' ? 'index.html#sweatpants' : 'index.html#collection';
+        bcLink.textContent = pCat === 'sweatpants' ? 'Sweatpants' : 'Hoodies';
+      }
+      const eyeEl = document.getElementById('productEyebrow');
+      if (eyeEl) {
+        eyeEl.textContent = pCat === 'sweatpants'
+          ? '21 CLOTHING • CAIRO DROP 001 • SWEATPANTS'
+          : '21 CLOTHING • CAIRO DROP 001 • ESSENTIALS';
+      }
+
       // Update titles
       document.title = `${currentProduct.name} — 21 Twenty One Clothing`;
       document.getElementById('pageTitle').textContent = `${currentProduct.name} — 21 Twenty One Clothing`;
@@ -891,7 +941,7 @@
         // Fallback Vector Art
         const color = activeVar.colorHex || currentProduct.svgFill || '#1c1c1c';
         const accent = currentProduct.accent || '#444';
-        stageContent.innerHTML = generateHoodieSvg(color, accent);
+        stageContent.innerHTML = StoreDB.generateGarmentSvg(StoreDB.getProductCategory(currentProduct), color, accent);
         counterPill.style.display = 'none';
         prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
@@ -943,13 +993,13 @@
 
     /* ── Size Selection ── */
     function renderSizesSelector() {
-      const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+      const sizes = StoreDB.getProductSizeKeys(currentProduct);
       const grid = document.getElementById('sizesGrid');
       const pSizes = currentProduct.sizes || {};
 
       // Determine default selected size
-      if (!pSizes[selectedSize] || pSizes[selectedSize] <= 0) {
-        selectedSize = sizes.find(s => pSizes[s] > 0) || 'L';
+      if (!sizes.includes(selectedSize) || pSizes[selectedSize] === undefined || pSizes[selectedSize] <= 0) {
+        selectedSize = sizes.find(s => pSizes[s] > 0) || sizes[0] || 'L';
       }
 
       grid.innerHTML = sizes.map(sz => {
@@ -958,9 +1008,9 @@
         return `
           <button type="button" 
                   class="size-tile-btn ${isSelected ? 'selected' : ''} ${!inStock ? 'disabled' : ''}" 
-                  onclick="selectSize('${sz}')"
+                  onclick="selectSize('${escapeHtml(sz)}')"
                   ${!inStock ? 'disabled title="Sold Out"' : ''}>
-            ${sz}
+            ${escapeHtml(sz)}
           </button>
         `;
       }).join('');
@@ -1012,7 +1062,8 @@
       const variants = currentProduct.colorVariants || [];
       const activeVar = variants[selectedColorIndex] || { colorName: 'Default' };
 
-      const msg = `أهلاً Twenty One،\nحابب أطلب هودي ${currentProduct.name}:\n- اللون: ${activeVar.colorName}\n- المقاس: ${selectedSize}\n- الكمية: ${selectedQty}\n- الإجمالي: ${(currentProduct.price * selectedQty).toLocaleString()} EGP\nمن فضلكم محتاج تفاصيل الشحن وتأكيد الطلب 💬`;
+      const pieceLabel = StoreDB.getProductCategory(currentProduct) === 'sweatpants' ? 'سويت بانتس' : 'هودي';
+      const msg = `أهلاً Twenty One،\nحابب أطلب ${pieceLabel} ${currentProduct.name}:\n- اللون: ${activeVar.colorName}\n- المقاس: ${selectedSize}\n- الكمية: ${selectedQty}\n- الإجمالي: ${(currentProduct.price * selectedQty).toLocaleString()} EGP\nمن فضلكم محتاج تفاصيل الشحن وتأكيد الطلب 💬`;
       btn.href = `https://wa.me/${brandWa}?text=${encodeURIComponent(msg)}`;
     }
 
@@ -1030,6 +1081,7 @@
       } else {
         cart.push({
           id: currentProduct.id,
+          category: StoreDB.getProductCategory(currentProduct),
           name: currentProduct.name,
           price: currentProduct.price,
           size: selectedSize,
@@ -1082,7 +1134,7 @@
         return `
           <a href="product.html?id=${p.id}" class="product-card">
             <div class="card-visual-box">
-              ${img ? `<img src="${img}" alt="${escapeHtml(p.name)}" class="card-real-img" loading="lazy" />` : generateHoodieSvg(color, p.accent || '#444')}
+              ${img ? `<img src="${img}" alt="${escapeHtml(p.name)}" class="card-real-img" loading="lazy" />` : StoreDB.generateGarmentSvg(StoreDB.getProductCategory(p), color, p.accent || '#444')}
             </div>
             <div class="card-details-box">
               <div class="card-title-row">
@@ -1105,7 +1157,10 @@
     /* ── Size Guide Modal ── */
     let currentStoreSizeGuideTab = 'top';
     function openProductSizeGuide() {
-      const type = currentProduct && currentProduct.sizeGuideType ? currentProduct.sizeGuideType : 'top';
+      const cat = StoreDB.getProductCategory(currentProduct);
+      const type = (currentProduct && currentProduct.sizeGuideType && currentProduct.sizeGuideType !== 'none')
+        ? currentProduct.sizeGuideType
+        : (cat === 'sweatpants' ? 'bottom' : 'top');
       currentStoreSizeGuideTab = type === 'bottom' ? 'bottom' : 'top';
       document.getElementById('sizeGuideOverlay').classList.add('open');
 
@@ -1118,6 +1173,36 @@
 
     function closeStoreSizeGuide() {
       document.getElementById('sizeGuideOverlay').classList.remove('open');
+    }
+
+    function updateStoreSizeCalculator() {
+      const isBottom = currentStoreSizeGuideTab === 'bottom';
+      const waistWrap = document.getElementById('storeCalcWaistWrap');
+      const modeHint = document.getElementById('storeCalcModeHint');
+      const resultEl = document.getElementById('storeCalcResultSize');
+      const reasonEl = document.getElementById('storeCalcReason');
+      if (waistWrap) waistWrap.style.display = isBottom ? 'block' : 'none';
+      if (modeHint) modeHint.textContent = isBottom ? 'Sweatpants: Waist & Length Formula (حاسبة السويت بانتس)' : 'Hoodies: Height & Weight Chest Formula';
+
+      const productSizes = (currentProduct && StoreDB.getProductCategory(currentProduct) === (isBottom ? 'sweatpants' : 'hoodies'))
+        ? StoreDB.getProductSizeKeys(currentProduct)
+        : null;
+
+      const calc = StoreDB.calculateRecommendedSize(isBottom ? 'bottom' : 'top', {
+        waistCm: document.getElementById('storeCalcWaist') ? document.getElementById('storeCalcWaist').value : '',
+        heightCm: document.getElementById('storeCalcHeight') ? document.getElementById('storeCalcHeight').value : 178,
+        weightKg: document.getElementById('storeCalcWeight') ? document.getElementById('storeCalcWeight').value : 76,
+        fitPref: document.getElementById('storeCalcFit') ? document.getElementById('storeCalcFit').value : 'relaxed',
+        availableSizes: productSizes
+      });
+
+      if (resultEl) resultEl.textContent = calc.recommendedSize;
+      if (reasonEl) reasonEl.textContent = calc.reasonAr;
+
+      document.querySelectorAll('#storeSizeGuideTable tbody tr').forEach(tr => {
+        const isMatch = tr.dataset.rowSize && tr.dataset.rowSize === calc.recommendedSize;
+        tr.style.background = isMatch ? 'rgba(232, 227, 216, 0.12)' : '';
+      });
     }
 
     function switchStoreSizeGuideTab(tab) {
@@ -1143,7 +1228,7 @@
         </thead>
         <tbody>
           ${guide.rows.map(r => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <tr data-row-size="${escapeHtml(r.size)}" style="border-bottom:1px solid rgba(255,255,255,0.05); transition: background 0.2s;">
               <td style="padding:12px 14px; font-weight:700; color:#fff;">${r.size}</td>
               ${tab === 'top' ? `
                 <td style="padding:12px 14px; color:var(--muted);">${r.chest || '-'} cm</td>
@@ -1161,6 +1246,7 @@
         </tbody>
       `;
       if (notes) notes.textContent = guide.fitNotes || '';
+      updateStoreSizeCalculator();
     }
 
     /* ── Cart Drawer & Checkout ── */
@@ -1205,7 +1291,7 @@
       container.innerHTML = cart.map((item, idx) => `
         <div class="cart-item-row">
           <div class="cart-item-preview">
-            ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.name)}" />` : generateHoodieSvg(item.colorHex || '#1c1c1c', '#444')}
+            ${item.image ? `<img src="${item.image}" alt="${escapeHtml(item.name)}" />` : StoreDB.generateGarmentSvg(item.category || 'hoodies', item.colorHex || '#1c1c1c', '#444')}
           </div>
           <div class="cart-item-info">
             <h4 class="cart-item-name">${escapeHtml(item.name)}</h4>

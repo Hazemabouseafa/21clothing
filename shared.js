@@ -271,6 +271,8 @@ const DEFAULT_CONTENT = {
   marqueeItems: "Twenty One Clothing ✦ 450 GSM French Terry ✦ Cairo, Egypt ✦ Drop 001 ✦ Heavyweight Hoodies ✦ Limited Quantities",
   collectionEyebrow: "Winter Essentials",
   collectionTitle: "Drop 001\nThe Hoodies",
+  sweatpantsEyebrow: "Bottoms Collection",
+  sweatpantsTitle: "Drop 001\nThe Sweatpants",
   storyEyebrow: "The Philosophy",
   storyTitle: "Built for the\nstreets of Cairo.",
   storyParagraph1: "Twenty One was born out of an obsession with the uncompromising hoodie. Engineered with ultra-heavyweight 450 GSM Egyptian combed cotton, bespoke garment dye, and an architectural drop-shoulder cut.",
@@ -814,6 +816,148 @@ const StoreDB = {
     sessionStorage.removeItem('twentyone_admin_logged');
     sessionStorage.removeItem('twentyone_admin_user');
     localStorage.removeItem('twentyone_admin_remember');
+  },
+
+  getProductCategory(product) {
+    return (product && product.category === 'sweatpants') ? 'sweatpants' : 'hoodies';
+  },
+
+  getProductSizeKeys(product) {
+    if (product && product.sizes && typeof product.sizes === 'object') {
+      const keys = Object.keys(product.sizes);
+      if (keys.length) return keys;
+    }
+    return ['S', 'M', 'L', 'XL', 'XXL'];
+  },
+
+  calculateRecommendedSize(type, opts = {}) {
+    const isBottom = type === 'bottom' || type === 'sweatpants';
+    const guides = this.getSizeGuides() || DEFAULT_SIZE_GUIDES;
+    const guide = (isBottom ? guides.bottom : guides.top) || DEFAULT_SIZE_GUIDES[isBottom ? 'bottom' : 'top'];
+    const rows = (guide && Array.isArray(guide.rows) && guide.rows.length) ? guide.rows : DEFAULT_SIZE_GUIDES[isBottom ? 'bottom' : 'top'].rows;
+
+    const h = Number(opts.heightCm) || 176;
+    const w = Number(opts.weightKg) || 74;
+    const waistInput = Number(opts.waistCm) || 0;
+    const fitPref = opts.fitPref || (isBottom ? 'relaxed' : 'oversized');
+    const availableSizes = Array.isArray(opts.availableSizes) && opts.availableSizes.length ? opts.availableSizes : null;
+    const stdOrder = ['S', 'M', 'L', 'XL', 'XXL'];
+
+    let idx = 2; // L default
+    let reasonAr = '';
+    let reasonEn = '';
+
+    if (isBottom) {
+      // Estimate waist in cm from height/weight if user didn't enter exact waist cm
+      const estWaistCm = waistInput > 45 ? waistInput : Math.round(62 + (w - 50) * 0.62 - Math.max(0, (h - 175) * 0.15));
+      // Parse guide bottom waist max bounds e.g. "72 - 78"
+      idx = rows.findIndex(r => {
+        const nums = String(r.waist || '').match(/\d+/g);
+        const maxW = nums && nums.length ? Number(nums[nums.length - 1]) : 0;
+        return maxW > 0 && estWaistCm <= maxW;
+      });
+      if (idx === -1) idx = rows.length - 1;
+
+      // Length check for tall customers (Sweatpants length in guide.rows)
+      const matchedLen = Number(String((rows[idx] && rows[idx].length) || '').match(/\d+/)?.[0]) || 104;
+      const targetMinLen = Math.round(h * 0.575);
+      let lengthBumped = false;
+      if (h >= 180 && matchedLen < targetMinLen && idx < rows.length - 1) {
+        idx += 1;
+        lengthBumped = true;
+      }
+      if (fitPref === 'baggy' && idx < rows.length - 1 && (waistInput ? (waistInput % 6 >= 4) : w >= 72)) {
+        idx += 1;
+      } else if (fitPref === 'fitted' && idx > 0 && waistInput && waistInput <= 76) {
+        idx -= 1;
+      }
+
+      const row = rows[Math.min(idx, rows.length - 1)] || rows[0];
+      let recSize = row.size || stdOrder[idx] || 'L';
+
+      // If product uses numeric waist sizes (e.g. 28, 30, 32, 34, 36, 38)
+      if (availableSizes && availableSizes.every(k => /^\d+$/.test(String(k).trim()))) {
+        const targetInches = Math.round(estWaistCm / 2.54) + (fitPref === 'baggy' ? 1 : 0);
+        let bestNum = availableSizes[0];
+        let bestDiff = Infinity;
+        availableSizes.forEach(s => {
+          const diff = Math.abs(Number(s) - targetInches);
+          if (diff < bestDiff) { bestDiff = diff; bestNum = s; }
+        });
+        recSize = bestNum;
+      } else if (availableSizes && !availableSizes.includes(recSize)) {
+        recSize = availableSizes[Math.min(idx, availableSizes.length - 1)] || availableSizes[0];
+      }
+
+      const waistLabel = waistInput > 45 ? `${waistInput} cm` : `~${estWaistCm} cm (تقديري)`;
+      reasonAr = `بناءً على مقاس الوسط (${waistLabel}) والطول (${h} سم)${lengthBumped ? ' مع مراعاة طول البنطلون المناسب' : ''}: وسط ${row.waist || '-'} سم • طول ${row.length || '-'} سم • فتحة الرجل ${row.legOpening || '-'} سم.`;
+      reasonEn = `Matched for waist ${waistLabel} & height ${h}cm: Waist ${row.waist || '-'} cm · Length ${row.length || '-'} cm · Opening ${row.legOpening || '-'} cm.`;
+      return { type: 'bottom', recommendedSize: recSize, matchedRow: row, estWaistCm, reasonAr, reasonEn };
+    } else {
+      // Hoodies / Top upper-body score
+      let score = 0;
+      if (w < 63 && h < 173) score = 0;
+      else if (w < 73 && h < 179) score = 1;
+      else if (w < 84 && h < 185) score = 2;
+      else if (w < 96) score = 3;
+      else score = 4;
+
+      if (fitPref === 'oversized' && w >= 68 && score < rows.length - 1) score = Math.min(rows.length - 1, score);
+      if (fitPref === 'fitted' && score > 0) score -= 1;
+
+      idx = Math.min(Math.max(0, score), rows.length - 1);
+      const row = rows[idx] || rows[0];
+      let recSize = row.size || stdOrder[idx] || 'L';
+      if (availableSizes && !availableSizes.includes(recSize)) {
+        recSize = availableSizes[Math.min(idx, availableSizes.length - 1)] || availableSizes[0];
+      }
+
+      reasonAr = `بناءً على الطول (${h} سم) والوزن (${w} كجم): عرض الصدر ${row.chest || '-'} سم • الطول ${row.length || '-'} سم • الكتف ${row.shoulders || '-'} سم.`;
+      reasonEn = `Matched for ${h}cm / ${w}kg: Chest ${row.chest || '-'} cm · Length ${row.length || '-'} cm · Shoulders ${row.shoulders || '-'} cm.`;
+      return { type: 'top', recommendedSize: recSize, matchedRow: row, reasonAr, reasonEn };
+    }
+  },
+
+  generateGarmentSvg(category, mainColor, accentColor) {
+    if (category === 'sweatpants') {
+      return `
+        <svg class="hoodie-artwork" viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="spGrad_${mainColor.replace('#','')}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${mainColor}" />
+              <stop offset="100%" stop-color="${accentColor}" />
+            </linearGradient>
+          </defs>
+          <path d="M84 36 C95 31 165 31 176 36 L186 88 L200 242 L152 246 L132 126 L128 126 L108 246 L60 242 L74 88 Z"
+                fill="url(#spGrad_${mainColor.replace('#','')})" stroke="rgba(255,255,255,0.16)" stroke-width="2" />
+          <path d="M84 36 C108 42 152 42 176 36 L178 52 C152 57 108 57 82 52 Z"
+                fill="rgba(0,0,0,0.28)" stroke="rgba(255,255,255,0.14)" stroke-width="1.2" />
+          <path d="M123 48 C120 66 117 78 119 88 M137 48 C140 66 143 78 141 88"
+                stroke="rgba(232,227,216,0.55)" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M77 82 Q92 98 90 120 M183 82 Q168 98 170 120"
+                stroke="rgba(255,255,255,0.14)" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M62 232 L106 236 M154 236 L198 232" stroke="rgba(255,255,255,0.16)" stroke-width="2"/>
+          <text x="150" y="102" text-anchor="middle" fill="rgba(232,227,216,0.22)" font-family="Playfair Display, serif" font-size="11" letter-spacing="2">21</text>
+        </svg>
+      `;
+    }
+    return `
+      <svg class="hoodie-artwork" viewBox="0 0 260 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hgGrad_${mainColor.replace('#','')}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${mainColor}" />
+            <stop offset="100%" stop-color="${accentColor}" />
+          </linearGradient>
+        </defs>
+        <path d="M80 65 L40 90 L22 180 L48 188 L64 118 L64 235 C64 242 70 245 78 245 L182 245 C190 245 196 242 196 235 L196 118 L212 188 L238 180 L220 90 L180 65 C170 40 150 28 130 28 C110 28 90 40 80 65 Z" 
+              fill="url(#hgGrad_${mainColor.replace('#','')})" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
+        <path d="M90 65 C100 85 160 85 170 65 C160 40 145 30 130 30 C115 30 100 40 90 65 Z" 
+              fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+        <path d="M115 76 L112 120 M145 76 L148 120" stroke="rgba(232,227,216,0.5)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M88 180 L172 180 L182 225 L78 225 Z" fill="rgba(0,0,0,0.2)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+        <text x="130" y="145" text-anchor="middle" fill="rgba(232,227,216,0.18)" font-family="Playfair Display, serif" font-size="22" letter-spacing="4">21</text>
+      </svg>
+    `;
   }
 };
 
