@@ -156,10 +156,13 @@
     .product-card:hover { transform: translate3d(0, -8px, 0); border-color: rgba(232, 227, 216, 0.34); box-shadow: 0 24px 55px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(232, 227, 216, 0.08); }
     .product-card:hover::before { opacity: 1; }
     .product-visual-wrap { position: relative; aspect-ratio: 4/5; background: radial-gradient(circle at 50% 60%, #1c1c20 0%, #0d0d0f 75%); display: flex; align-items: center; justify-content: center; padding: 30px; overflow: hidden; }
-    .product-visual-wrap.has-real-image { padding: 0; background: #0c0c0e; }
+    .product-visual-wrap.has-real-image { padding: 0; background: linear-gradient(110deg, #0d0d10 25%, #17171c 45%, #0d0d10 65%); background-size: 200% 100%; animation: cardImgShimmer 1.4s ease-in-out infinite; }
+    .product-visual-wrap.has-real-image.img-loaded { animation: none; background: #0c0c0e; }
+    @keyframes cardImgShimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
     .product-visual-wrap::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,8,8,0.45) 0%, transparent 28%); opacity: 0; transition: opacity 0.4s var(--ease); pointer-events: none; z-index: 3; }
     .product-card:hover .product-visual-wrap::after { opacity: 1; }
-    .product-real-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.85s var(--ease-out-expo), opacity 0.45s ease; display: block; will-change: transform; }
+    .product-real-img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: transform 0.85s var(--ease-out-expo), opacity 0.35s ease; display: block; will-change: transform, opacity; }
+    .product-real-img.loaded { opacity: 1; }
     .product-card:hover .product-real-img { transform: scale(1.075); }
     .product-real-img-secondary { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity 0.5s var(--ease), transform 0.85s var(--ease-out-expo); z-index: 2; will-change: transform, opacity; }
     .product-card:hover .product-real-img-secondary { opacity: 1; transform: scale(1.075); }
@@ -285,7 +288,7 @@
   <!-- Navigation -->
   <nav id="mainNav">
     <a href="#" class="nav-brand">
-      <img src="logo.png" alt="21" class="nav-logo-icon" />
+      <img src="logo.png" alt="21" class="nav-logo-icon" width="32" height="32" decoding="async" />
       <span class="nav-logo-text">21</span>
     </a>
     <ul class="nav-links">
@@ -314,7 +317,7 @@
       <div class="hero-logo-container">
         <div class="hero-orbit-ring" aria-hidden="true"></div>
         <div class="hero-orbit-ring-outer" aria-hidden="true"></div>
-        <img src="logo.png" alt="21 — Twenty One Clothing" class="hero-logo" id="heroLogo" fetchpriority="high" />
+        <img src="logo.png" alt="21 — Twenty One Clothing" class="hero-logo" id="heroLogo" fetchpriority="high" decoding="async" width="240" height="240" />
       </div>
       <p class="hero-tagline" id="heroTagline">Cairo Streetwear Essentials &mdash; Drop 001</p>
       <div class="hero-cta-wrap">
@@ -658,7 +661,7 @@
   <!-- Toast -->
   <div class="toast-popup" id="storeToast">Added to Bag</div>
   <!-- Shared Data Layer -->
-  <script src="shared.js?v=22.0"></script>
+  <script src="shared.js?v=23.0"></script>
 
   <!-- Storefront Controller Script -->
   <script>
@@ -918,7 +921,7 @@
     let currentCategoryFilter = 'all';
     let currentSweatpantsFilter = 'all';
 
-    function buildProductCardHtml(p, idx) {
+    function buildProductCardHtml(p, idx, isAboveFoldCategory = false) {
       const cat = StoreDB.getProductCategory(p);
       const availableSizes = StoreDB.getProductSizeKeys(p);
       const defaultSize = availableSizes.find(sz => p.sizes && p.sizes[sz] > 0) || availableSizes[0] || 'L';
@@ -930,6 +933,7 @@
       const hasImages = activeVariant.images && activeVariant.images.length > 0;
       const color = activeVariant.colorHex || p.svgFill || '#1c1c1c';
       const accent = p.accent || '#444';
+      const priorityAttrs = (isAboveFoldCategory && idx < 2) ? 'fetchpriority="high" decoding="async"' : 'loading="lazy" decoding="async"';
 
       return `
         <div class="product-card" data-pid="${p.id}" data-category="${cat}" data-active-variant="0" style="--card-idx:${idx % 6};">
@@ -937,9 +941,9 @@
             ${p.badge ? `<span class="product-badge-tag">${p.badge}</span>` : ''}
             <div id="cardMediaBox_${p.id}" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; position:relative;">
               ${hasImages ? `
-                <img src="${activeVariant.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" loading="lazy" />
+                <img src="${activeVariant.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" ${priorityAttrs} onload="markCardImgLoaded(this)" onerror="markCardImgLoaded(this)" />
                 ${activeVariant.images.length > 1 ? `
-                  <img src="${activeVariant.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" loading="lazy" />
+                  <img data-hover-src="${activeVariant.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" decoding="async" />
                   <span class="image-count-tag" id="cardImgCount_${p.id}">✦ ${activeVariant.images.length} Photos</span>
                 ` : ''}
               ` : StoreDB.generateGarmentSvg(cat, color, accent)}
@@ -1007,11 +1011,42 @@
       `;
     }
 
+    function markCardImgLoaded(img) {
+      if (!img) return;
+      img.classList.add('loaded');
+      const wrap = img.closest('.product-visual-wrap');
+      if (wrap) wrap.classList.add('img-loaded');
+    }
+
+    function hydrateCardHoverImage(card) {
+      if (!card) return;
+      const sec = card.querySelector('.product-real-img-secondary[data-hover-src]');
+      if (sec && !sec.getAttribute('src')) {
+        sec.src = sec.dataset.hoverSrc;
+      }
+    }
+
+    let lastProductsRenderSig = '';
+
     function renderCategoryGrid(gridId, category, filterValue) {
       const grid = document.getElementById(gridId);
       if (!grid) return;
 
-      const products = StoreDB.getProducts().filter(p => p.active !== false && StoreDB.getProductCategory(p) === category);
+      const allRaw = StoreDB.getProducts();
+      if (!allRaw.length && StoreDB.isOnline() && !StoreDB.hasSyncedOnce) {
+        grid.innerHTML = Array.from({ length: 3 }, () => `
+          <div class="product-card is-visible">
+            <div class="product-visual-wrap has-real-image"></div>
+            <div class="product-info-box" style="gap:10px;">
+              <div style="height:20px; width:65%; background:rgba(255,255,255,0.06); border-radius:4px;"></div>
+              <div style="height:14px; width:40%; background:rgba(255,255,255,0.04); border-radius:4px;"></div>
+            </div>
+          </div>
+        `).join('');
+        return;
+      }
+
+      const products = allRaw.filter(p => p.active !== false && StoreDB.getProductCategory(p) === category);
       const filtered = filterValue === 'all'
         ? products
         : products.filter(p => (p.name + ' ' + (p.fit || '') + ' ' + (p.badge || '')).toLowerCase().includes(filterValue.toLowerCase()));
@@ -1024,14 +1059,29 @@
         return;
       }
 
-      grid.innerHTML = filtered.map((p, idx) => buildProductCardHtml(p, idx)).join('');
+      grid.innerHTML = filtered.map((p, idx) => buildProductCardHtml(p, idx, category === 'hoodies')).join('');
     }
 
-    function renderStorefrontProducts() {
+    function renderStorefrontProducts(force = false) {
+      const allRaw = StoreDB.getProducts();
+      const renderSig = JSON.stringify({
+        synced: StoreDB.hasSyncedOnce,
+        f1: currentCategoryFilter,
+        f2: currentSweatpantsFilter,
+        items: allRaw
+      });
+      if (!force && renderSig === lastProductsRenderSig) return;
+      lastProductsRenderSig = renderSig;
+
       renderCategoryGrid('productGrid', 'hoodies', currentCategoryFilter);
       renderCategoryGrid('sweatpantsGrid', 'sweatpants', currentSweatpantsFilter);
 
       document.querySelectorAll('.product-card').forEach(card => {
+        const primary = card.querySelector('.product-real-img');
+        if (primary && primary.complete && primary.naturalWidth > 0) {
+          markCardImgLoaded(primary);
+        }
+
         const pills = card.querySelectorAll('.size-pill:not(.disabled)');
         pills.forEach(pill => {
           pill.addEventListener('click', () => {
@@ -1039,6 +1089,9 @@
             pill.classList.add('selected');
           });
         });
+
+        card.addEventListener('pointerenter', () => hydrateCardHoverImage(card), { once: true, passive: true });
+        card.addEventListener('touchstart', () => hydrateCardHoverImage(card), { once: true, passive: true });
 
         if (hasFinePointer) {
           card.addEventListener('mousemove', e => {
@@ -1105,13 +1158,18 @@
       mediaBox.style.transition = 'opacity 0.28s ease, transform 0.35s var(--ease-out-expo)';
 
       if (hasImages) {
+        visualWrap.classList.remove('img-loaded');
         mediaBox.innerHTML = `
-          <img src="${v.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" loading="lazy" />
+          <img src="${v.images[0]}" class="product-real-img" alt="${escapeHtml(p.name)}" id="cardImgPrimary_${p.id}" decoding="async" onload="markCardImgLoaded(this)" onerror="markCardImgLoaded(this)" />
           ${v.images.length > 1 ? `
-            <img src="${v.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" loading="lazy" />
+            <img src="${v.images[1]}" class="product-real-img-secondary" alt="${escapeHtml(p.name)}" id="cardImgSecondary_${p.id}" decoding="async" />
             <span class="image-count-tag" id="cardImgCount_${p.id}">✦ ${v.images.length} Photos</span>
           ` : ''}
         `;
+        const nextPrimary = mediaBox.querySelector('.product-real-img');
+        if (nextPrimary && nextPrimary.complete && nextPrimary.naturalWidth > 0) {
+          markCardImgLoaded(nextPrimary);
+        }
       } else {
         mediaBox.innerHTML = StoreDB.generateGarmentSvg(StoreDB.getProductCategory(p), v.colorHex || p.svgFill || '#1c1c1c', p.accent || '#444');
       }

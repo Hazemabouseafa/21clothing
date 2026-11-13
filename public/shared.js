@@ -283,6 +283,7 @@ const DEFAULT_CONTENT = {
 
 const StoreDB = {
   hasBackend: false,
+  hasSyncedOnce: false,
   memoryCache: {},
 
   getNeonUrl() {
@@ -357,85 +358,137 @@ const StoreDB = {
     } catch (e) {}
   },
 
+  setIfChanged(key, val) {
+    const prev = this.get(key, undefined);
+    try {
+      if (prev !== undefined && JSON.stringify(prev) === JSON.stringify(val)) {
+        return false;
+      }
+    } catch (e) {}
+    this.set(key, val);
+    return true;
+  },
+
+  async uploadMediaDataUrl(dataUrl) {
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/') || !this.isOnline()) {
+      return dataUrl;
+    }
+    try {
+      const res = await this.fetchApi('/api/media/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.url) return json.url;
+      }
+    } catch (e) {}
+    return dataUrl;
+  },
+
   isOnline() {
     return (typeof window !== 'undefined' && window.location.protocol.startsWith('http')) || this.hasBackend;
   },
 
   async syncWithBackend() {
     if (typeof window === 'undefined' || !window.location.protocol.startsWith('http')) return;
+    const isAdminPage = window.location.pathname.includes('admin') || Boolean(document.getElementById('tab-orders'));
+
     try {
-      const [pRes, oRes, prRes, shRes, stRes, cRes, sgRes] = await Promise.allSettled([
-        this.fetchApi('/api/products'),
-        this.fetchApi('/api/orders'),
-        this.fetchApi('/api/promos'),
-        this.fetchApi('/api/shipping'),
-        this.fetchApi('/api/settings'),
-        this.fetchApi('/api/content'),
-        this.fetchApi('/api/size-guides')
-      ]);
-
       let anySuccess = false;
+      let anyChanged = false;
 
-      // ── 1. Authoritative Products Sync from Cloud DB ──
-      if (pRes.status === 'fulfilled' && pRes.value.ok) {
+      // Primary fast path: 1 unified /api/storefront request (skips orders & replaces base64 blobs with /media URLs)
+      const sfRes = await this.fetchApi('/api/storefront').catch(() => null);
+      if (sfRes && sfRes.ok) {
         anySuccess = true;
-        const remoteProducts = await pRes.value.json();
-
-        if (Array.isArray(remoteProducts)) {
-          const sorted = [...remoteProducts].sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
-          this.set('products', sorted);
+        const sf = await sfRes.json();
+        if (sf && Array.isArray(sf.products)) {
+          const sorted = [...sf.products].sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
+          if (this.setIfChanged('products', sorted)) anyChanged = true;
         }
-      }
-
-      // ── 2. Orders Sync ──
-      if (oRes.status === 'fulfilled' && oRes.value.ok) {
-        anySuccess = true;
-        const remoteOrders = await oRes.value.json();
-        if (Array.isArray(remoteOrders)) {
-          this.set('orders', remoteOrders);
+        if (sf && sf.promos !== undefined && this.setIfChanged('promos', sf.promos)) anyChanged = true;
+        if (sf && sf.shipping !== undefined && this.setIfChanged('shipping', sf.shipping)) anyChanged = true;
+        if (sf && sf.content !== undefined && this.setIfChanged('content', sf.content)) anyChanged = true;
+        if (sf && sf.sizeGuides !== undefined && this.setIfChanged('sizeGuides', sf.sizeGuides)) anyChanged = true;
+        if (sf && sf.settings !== undefined && !isAdminPage) {
+          if (this.setIfChanged('settings', sf.settings)) anyChanged = true;
         }
-      }
 
-      // ── 3. Promos Sync ──
-      if (prRes.status === 'fulfilled' && prRes.value.ok) {
-        anySuccess = true;
-        this.set('promos', await prRes.value.json());
-      }
+        // Only admin console needs orders + full settings (with credentials)
+        if (isAdminPage) {
+          const [oRes, stRes] = await Promise.allSettled([
+            this.fetchApi('/api/orders'),
+            this.fetchApi('/api/settings')
+          ]);
+          if (oRes.status === 'fulfilled' && oRes.value.ok) {
+            const remoteOrders = await oRes.value.json();
+            if (Array.isArray(remoteOrders) && this.setIfChanged('orders', remoteOrders)) anyChanged = true;
+          }
+          if (stRes.status === 'fulfilled' && stRes.value.ok) {
+            const remoteSettings = (await stRes.value.json()) || {};
+            if (this.setIfChanged('settings', remoteSettings)) anyChanged = true;
+          }
+        }
+      } else {
+        // Fallback path if /api/storefront is unavailable
+        const reqs = [
+          this.fetchApi('/api/products'),
+          isAdminPage ? this.fetchApi('/api/orders') : Promise.resolve(null),
+          this.fetchApi('/api/promos'),
+          this.fetchApi('/api/shipping'),
+          this.fetchApi('/api/settings'),
+          this.fetchApi('/api/content'),
+          this.fetchApi('/api/size-guides')
+        ];
+        const [pRes, oRes, prRes, shRes, stRes, cRes, sgRes] = await Promise.allSettled(reqs);
 
-      // ── 4. Shipping Sync ──
-      if (shRes.status === 'fulfilled' && shRes.value.ok) {
-        anySuccess = true;
-        this.set('shipping', await shRes.value.json());
-      }
-
-      // ── 5. Settings Sync ──
-      if (stRes.status === 'fulfilled' && stRes.value.ok) {
-        anySuccess = true;
-        const remoteSettings = await stRes.value.json() || {};
-        this.set('settings', remoteSettings);
-      }
-
-      // ── 6. Content Sync ──
-      if (cRes.status === 'fulfilled' && cRes.value.ok) {
-        anySuccess = true;
-        const remoteContent = await cRes.value.json() || {};
-        this.set('content', remoteContent);
-      }
-
-      // ── 7. Size Guides Sync ──
-      if (sgRes.status === 'fulfilled' && sgRes.value.ok) {
-        anySuccess = true;
-        this.set('sizeGuides', await sgRes.value.json());
+        if (pRes.status === 'fulfilled' && pRes.value && pRes.value.ok) {
+          anySuccess = true;
+          const remoteProducts = await pRes.value.json();
+          if (Array.isArray(remoteProducts)) {
+            const sorted = [...remoteProducts].sort((a, b) => (Number(a.sortOrder) || 9999) - (Number(b.sortOrder) || 9999));
+            if (this.setIfChanged('products', sorted)) anyChanged = true;
+          }
+        }
+        if (isAdminPage && oRes.status === 'fulfilled' && oRes.value && oRes.value.ok) {
+          anySuccess = true;
+          const remoteOrders = await oRes.value.json();
+          if (Array.isArray(remoteOrders) && this.setIfChanged('orders', remoteOrders)) anyChanged = true;
+        }
+        if (prRes.status === 'fulfilled' && prRes.value && prRes.value.ok) {
+          anySuccess = true;
+          if (this.setIfChanged('promos', await prRes.value.json())) anyChanged = true;
+        }
+        if (shRes.status === 'fulfilled' && shRes.value && shRes.value.ok) {
+          anySuccess = true;
+          if (this.setIfChanged('shipping', await shRes.value.json())) anyChanged = true;
+        }
+        if (stRes.status === 'fulfilled' && stRes.value && stRes.value.ok) {
+          anySuccess = true;
+          if (this.setIfChanged('settings', (await stRes.value.json()) || {})) anyChanged = true;
+        }
+        if (cRes.status === 'fulfilled' && cRes.value && cRes.value.ok) {
+          anySuccess = true;
+          if (this.setIfChanged('content', (await cRes.value.json()) || {})) anyChanged = true;
+        }
+        if (sgRes.status === 'fulfilled' && sgRes.value && sgRes.value.ok) {
+          anySuccess = true;
+          if (this.setIfChanged('sizeGuides', await sgRes.value.json())) anyChanged = true;
+        }
       }
 
       if (anySuccess) {
         this.hasBackend = true;
       }
+      this.hasSyncedOnce = true;
 
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('storedb_synced'));
+      if (typeof window !== 'undefined' && (anyChanged || !isAdminPage)) {
+        window.dispatchEvent(new CustomEvent('storedb_synced', { detail: { changed: anyChanged } }));
       }
     } catch (e) {
+      this.hasSyncedOnce = true;
       console.error('[StoreDB sync error]', e);
     }
   },

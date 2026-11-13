@@ -10,6 +10,13 @@ const {
   getDatabaseInfo,
   isNeonActive
 } = require('../lib/db');
+const {
+  saveDataUrlToMedia,
+  projectSingleProductMedia,
+  externalizeProductsMedia,
+  getCachedProjectedProducts,
+  invalidateProductsProjectionCache
+} = require('../lib/media');
 
 function parseBody(req) {
   if (req.body && typeof req.body === 'object') return Promise.resolve(req.body);
@@ -102,32 +109,78 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // ── /api/storefront (Unified lightweight storefront bootstrap — no orders, no inline base64 images) ──
+    if (pathname === '/api/storefront' && method === 'GET') {
+      const [rawProducts, promos, shipping, rawSettings, content, sizeGuides] = await Promise.all([
+        getStoreData('products', undefined, req),
+        getStoreData('promos', undefined, req),
+        getStoreData('shipping', undefined, req),
+        getStoreData('settings', undefined, req),
+        getStoreData('content', undefined, req),
+        getStoreData('sizeGuides', undefined, req)
+      ]);
+      const projectedProducts = getCachedProjectedProducts(rawProducts);
+      const safeSettings = rawSettings && typeof rawSettings === 'object' ? { ...rawSettings } : {};
+      delete safeSettings.adminUser;
+      delete safeSettings.adminPass;
+      return sendJson(res, 200, {
+        products: projectedProducts,
+        promos,
+        shipping,
+        settings: safeSettings,
+        content,
+        sizeGuides
+      }, req);
+    }
+
+    // ── /api/media/upload (Store uploaded image binary on VPS /media/<hash>.<ext>) ──
+    if (pathname === '/api/media/upload' && method === 'POST') {
+      const body = await parseBody(req);
+      if (Array.isArray(body.dataUrls)) {
+        return sendJson(res, 200, { urls: body.dataUrls.map(u => saveDataUrlToMedia(u)) }, req);
+      }
+      if (typeof body.dataUrl === 'string') {
+        return sendJson(res, 200, { url: saveDataUrlToMedia(body.dataUrl) }, req);
+      }
+      return sendJson(res, 400, { error: 'Missing dataUrl' }, req);
+    }
+
     // ── /api/products ──
     if (pathname === '/api/products') {
       let products = await getStoreData('products', undefined, req);
-      if (method === 'GET') return sendJson(res, 200, products, req);
+      if (method === 'GET') {
+        const outProducts = (parsedUrl.query && parsedUrl.query.raw === '1')
+          ? products
+          : getCachedProjectedProducts(products);
+        return sendJson(res, 200, outProducts, req);
+      }
 
       if (method === 'POST') {
-        const body = await parseBody(req);
+        const body = projectSingleProductMedia(await parseBody(req));
         const newId = products.length ? Math.max(...products.map(p => Number(p.id) || 0)) + 1 : 1;
         const newSortOrder = products.length ? Math.max(...products.map(p => Number(p.sortOrder) || 0)) + 1 : 1;
         const newProduct = { id: newId, sortOrder: newSortOrder, ...body, active: true };
         products.push(newProduct);
+        invalidateProductsProjectionCache();
         await setStoreData('products', products, req);
-        return sendJson(res, 201, newProduct, req);
+        return sendJson(res, 201, projectSingleProductMedia(newProduct), req);
       }
 
       if (method === 'PUT') {
         const body = await parseBody(req);
         if (Array.isArray(body)) {
-          await setStoreData('products', body, req);
-          return sendJson(res, 200, body, req);
+          const cleanProducts = externalizeProductsMedia(body);
+          invalidateProductsProjectionCache();
+          await setStoreData('products', cleanProducts, req);
+          return sendJson(res, 200, getCachedProjectedProducts(cleanProducts), req);
         } else if (body && body.id) {
           const idx = products.findIndex(p => Number(p.id) === Number(body.id));
           if (idx !== -1) {
-            products[idx] = { ...products[idx], ...body, id: Number(body.id) };
+            const cleanBody = projectSingleProductMedia(body);
+            products[idx] = { ...products[idx], ...cleanBody, id: Number(body.id) };
+            invalidateProductsProjectionCache();
             await setStoreData('products', products, req);
-            return sendJson(res, 200, products[idx], req);
+            return sendJson(res, 200, projectSingleProductMedia(products[idx]), req);
           } else {
             return sendJson(res, 404, { error: 'Product not found' }, req);
           }
@@ -140,6 +193,7 @@ module.exports = async (req, res) => {
           const idx = products.findIndex(p => Number(p.id) === Number(idToDelete));
           if (idx !== -1) {
             products.splice(idx, 1);
+            invalidateProductsProjectionCache();
             await setStoreData('products', products, req);
             return sendJson(res, 200, { success: true }, req);
           }
@@ -158,16 +212,21 @@ module.exports = async (req, res) => {
       if (idx === -1) return sendJson(res, 404, { error: 'Product not found' }, req);
 
       if (method === 'GET') {
-        return sendJson(res, 200, products[idx], req);
+        const outProduct = (parsedUrl.query && parsedUrl.query.raw === '1')
+          ? products[idx]
+          : projectSingleProductMedia(products[idx]);
+        return sendJson(res, 200, outProduct, req);
       }
       if (method === 'PUT') {
-        const body = await parseBody(req);
+        const body = projectSingleProductMedia(await parseBody(req));
         products[idx] = { ...products[idx], ...body, id };
+        invalidateProductsProjectionCache();
         await setStoreData('products', products, req);
-        return sendJson(res, 200, products[idx], req);
+        return sendJson(res, 200, projectSingleProductMedia(products[idx]), req);
       }
       if (method === 'DELETE') {
         products.splice(idx, 1);
+        invalidateProductsProjectionCache();
         await setStoreData('products', products, req);
         return sendJson(res, 200, { success: true }, req);
       }
@@ -199,6 +258,7 @@ module.exports = async (req, res) => {
             }
           });
           await setStoreData('products', products, req);
+          invalidateProductsProjectionCache();
         }
 
         return sendJson(res, 201, newOrder, req);
@@ -337,6 +397,7 @@ module.exports = async (req, res) => {
     if (pathname === '/api/neon-sync' && method === 'POST') {
       const body = await parseBody(req);
       try {
+        invalidateProductsProjectionCache();
         const result = await syncAllToNeon(body, req);
         return sendJson(res, 200, result, req);
       } catch (syncErr) {
@@ -355,6 +416,7 @@ module.exports = async (req, res) => {
       }
       if (method === 'POST') {
         const body = await parseBody(req);
+        invalidateProductsProjectionCache();
         const result = await syncAllToNeon(body, req);
         return sendJson(res, 200, result, req);
       }
@@ -364,6 +426,7 @@ module.exports = async (req, res) => {
     if (pathname === '/api/migrate-remote' && method === 'POST') {
       const body = await parseBody(req);
       try {
+        invalidateProductsProjectionCache();
         const result = await migrateFromRemoteUrl(body.sourceUrl || 'https://21clothingwear.com', req);
         return sendJson(res, 200, result, req);
       } catch (migErr) {
@@ -373,6 +436,7 @@ module.exports = async (req, res) => {
 
     // ── /api/reset ──
     if (pathname === '/api/reset' && method === 'POST') {
+      invalidateProductsProjectionCache();
       await resetStoreData(req);
       return sendJson(res, 200, { success: true, message: 'Store data restored to preserved production seed' }, req);
     }

@@ -1348,7 +1348,7 @@
 
   <div class="admin-toast" id="adminToast">Action completed</div>
   <!-- Shared Data Script -->
-  <script src="shared.js?v=22.0"></script>
+  <script src="shared.js?v=23.0"></script>
 
   <!-- Admin Controller -->
   <script>
@@ -2179,8 +2179,8 @@
         reader.onload = function(evt) {
           const rawDataUrl = evt.target.result;
           const img = new Image();
-          img.onload = function() {
-            const maxDim = 1000;
+          img.onload = async function() {
+            const maxDim = 900;
             let width = img.width;
             let height = img.height;
             if (width > maxDim || height > maxDim) {
@@ -2197,10 +2197,14 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            let compressedDataUrl = canvas.toDataURL('image/webp', 0.82);
+            if (!compressedDataUrl.startsWith('data:image/webp')) {
+              compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            }
 
+            const finalUrl = await StoreDB.uploadMediaDataUrl(compressedDataUrl);
             if (!currentProductVariants[vIdx].images) currentProductVariants[vIdx].images = [];
-            currentProductVariants[vIdx].images.push(compressedDataUrl);
+            currentProductVariants[vIdx].images.push(finalUrl);
 
             processedCount++;
             if (processedCount === filesArr.length) {

@@ -4,7 +4,8 @@ const path = require('path');
 const url = require('url');
 const zlib = require('zlib');
 const apiHandler = require('./api/index');
-const { getDatabaseInfo, closeLocalDb, DATA_DIR } = require('./lib/db');
+const { getDatabaseInfo, getStoreData, closeLocalDb, DATA_DIR } = require('./lib/db');
+const { getMediaEntry, hydrateMediaFromProducts } = require('./lib/media');
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -19,6 +20,8 @@ const MIME_TYPES = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8'
@@ -34,6 +37,33 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/healthz') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify({ ok: true, uptime: Math.round(process.uptime()) }));
+  }
+
+  // ── FAST IMMUTABLE BINARY MEDIA CACHE ROUTE (/media/<hash>.<ext>) ──
+  if (pathname.startsWith('/media/')) {
+    const filename = pathname.slice('/media/'.length);
+    const entry = await getMediaEntry(filename, () => getStoreData('products'));
+    if (!entry) {
+      res.writeHead(404, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-cache' });
+      return res.end('Media Not Found');
+    }
+
+    const commonHeaders = {
+      'Content-Type': entry.mime,
+      'Content-Length': entry.size,
+      'ETag': entry.etag,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+      'Access-Control-Allow-Origin': '*'
+    };
+
+    if (req.headers['if-none-match'] === entry.etag) {
+      res.writeHead(304, commonHeaders);
+      return res.end();
+    }
+
+    res.writeHead(200, commonHeaders);
+    return res.end(req.method === 'HEAD' ? undefined : entry.buffer);
   }
 
   // ── ROUTE API CALLS TO HANDLER ──
@@ -134,6 +164,8 @@ server.headersTimeout = 66000;
 
 server.listen(PORT, HOST, async () => {
   const dbInfo = await getDatabaseInfo();
+  // Pre-extract any legacy inline base64 images into /app/data/media + RAM cache before first traffic
+  hydrateMediaFromProducts(() => getStoreData('products')).catch(() => {});
   console.log(`=======================================================`);
   console.log(` 21 — TWENTY ONE CLOTHING VPS SERVER IS LIVE! 🚀`);
   console.log(` Storefront:  http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);

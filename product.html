@@ -684,7 +684,7 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="shared.js?v=22.0"></script>
+  <script src="shared.js?v=23.0"></script>
   <script>
     /* ── Scroll Progress Fallback ── */
     (function initProductScrollBar() {
@@ -782,12 +782,18 @@
       return null;
     }
 
+    let lastProductPageSig = '';
+
     /* ── Load Product Data ── */
     function loadProductPage() {
       const pid = getProductIdFromUrl();
       const allProducts = StoreDB.getProducts().filter(p => p.active !== false);
 
       if (!allProducts.length) {
+        if (StoreDB.isOnline() && !StoreDB.hasSyncedOnce) {
+          document.getElementById('breadcrumbCurrentName').textContent = 'Loading Piece...';
+          return;
+        }
         document.getElementById('productLoadedContainer').innerHTML = `
           <div style="grid-column:1/-1; text-align:center; padding:80px 20px;">
             <h2>No Products Available</h2>
@@ -798,7 +804,12 @@
         return;
       }
 
-      currentProduct = (pid ? allProducts.find(p => String(p.id) === String(pid)) : null) || allProducts[0];
+      const targetProd = (pid ? allProducts.find(p => String(p.id) === String(pid)) : null) || allProducts[0];
+      const nextSig = JSON.stringify({ p: targetProd, count: allProducts.length });
+      if (nextSig === lastProductPageSig) return;
+      lastProductPageSig = nextSig;
+
+      currentProduct = targetProd;
 
       const pCat = StoreDB.getProductCategory(currentProduct);
       const bcLink = document.getElementById('breadcrumbCategoryLink');
@@ -922,7 +933,7 @@
         selectedImageIndex = Math.min(selectedImageIndex, images.length - 1);
         const currentSrc = images[selectedImageIndex];
         stageContent.innerHTML = `
-          <img src="${currentSrc}" alt="${escapeHtml(currentProduct.name)}" class="main-stage-img" id="mainImageElem" onclick="openLightbox('${currentSrc}')" />
+          <img src="${currentSrc}" alt="${escapeHtml(currentProduct.name)}" class="main-stage-img" id="mainImageElem" fetchpriority="high" decoding="async" onclick="openLightbox('${currentSrc}')" />
         `;
         counterPill.textContent = `${selectedImageIndex + 1} / ${images.length}`;
         counterPill.style.display = 'block';
@@ -934,7 +945,7 @@
         strip.style.display = images.length > 1 ? 'flex' : 'none';
         strip.innerHTML = images.map((imgSrc, idx) => `
           <div class="thumb-item ${idx === selectedImageIndex ? 'active' : ''}" onclick="selectThumbImage(${idx})">
-            <img src="${imgSrc}" alt="${escapeHtml(currentProduct.name)} thumbnail" />
+            <img src="${imgSrc}" alt="${escapeHtml(currentProduct.name)} thumbnail" loading="lazy" decoding="async" />
           </div>
         `).join('');
       } else {
@@ -1134,7 +1145,7 @@
         return `
           <a href="product.html?id=${p.id}" class="product-card">
             <div class="card-visual-box">
-              ${img ? `<img src="${img}" alt="${escapeHtml(p.name)}" class="card-real-img" loading="lazy" />` : StoreDB.generateGarmentSvg(StoreDB.getProductCategory(p), color, p.accent || '#444')}
+              ${img ? `<img src="${img}" alt="${escapeHtml(p.name)}" class="card-real-img" loading="lazy" decoding="async" />` : StoreDB.generateGarmentSvg(StoreDB.getProductCategory(p), color, p.accent || '#444')}
             </div>
             <div class="card-details-box">
               <div class="card-title-row">
